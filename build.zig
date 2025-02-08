@@ -26,7 +26,11 @@ pub fn build(b: *std.Build) !void {
 
     // Absolute path to openocd.cfg
     const openocdcfg = b.path("build/openocd.cfg").getPath(b);
-    const firmwarepath = b.getInstallPath(fw_install_step.dir, fw_install_step.dest_rel_path);
+    const firmwarepath_raw = b.getInstallPath(fw_install_step.dir, fw_install_step.dest_rel_path);
+
+    const firmwarepath = try std.mem.replaceOwned(u8, b.allocator, firmwarepath_raw, "\\", "\\\\");
+
+    //std.debug.print("{s}", .{firmwarepath});
     const openocdcmds = try std.fmt.allocPrint(b.allocator, "program {s} verify reset exit", .{firmwarepath});
 
     const flash_elf = b.addSystemCommand(&[_][]const u8{ openocd, "-f", openocdcfg, "-c", openocdcmds });
