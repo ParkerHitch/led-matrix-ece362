@@ -18,8 +18,10 @@ pub fn build(b: *std.Build) !void {
     const fw_install_step = mb.add_install_firmware(firmware, .{ .format = .elf });
     b.getInstallStep().dependOn(&fw_install_step.step);
 
+    // -----------
     // Flash step
-
+    // -----------
+    //
     // Absolute path to openocd.cfg
     const openocdcfg = b.path("build/openocd.cfg").getPath(b);
     const firmwarepath = b.getInstallPath(fw_install_step.dir, fw_install_step.dest_rel_path);
@@ -31,4 +33,18 @@ pub fn build(b: *std.Build) !void {
 
     const flash_step = b.step("flash", "Flash microcontroller with .elf via openocd");
     flash_step.dependOn(&flash_elf.step);
+
+    // ---------
+    // Check step (for zls)
+    // ---------
+    // See: https://zigtools.org/zls/guides/build-on-save/
+    // Need to redefine same firmware
+    const firmware_check = mb.add_firmware(.{
+        .name = "compcheck",
+        .target = mb.ports.stm32.chips.STM32F091RC,
+        .optimize = .ReleaseSmall,
+        .root_source_file = b.path("src/main.zig"),
+    });
+    const check = b.step("check", "Check if firmware compiles");
+    check.dependOn(&firmware_check.artifact.step);
 }

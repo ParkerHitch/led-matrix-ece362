@@ -3,10 +3,10 @@ const microzig = @import("microzig");
 const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 
-const GenInit = @import("init/general.zig");
+const ChipInit = @import("init/general.zig");
 
 pub fn main() void {
-    GenInit.internal_clock();
+    ChipInit.internal_clock();
 
     RCC.AHBENR.modify(.{
         .GPIOCEN = 1,
