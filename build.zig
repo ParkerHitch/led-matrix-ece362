@@ -19,13 +19,14 @@ pub fn build(b: *std.Build) !void {
     b.getInstallStep().dependOn(&fw_install_step.step);
 
     // Flash step
+    const openocd = try b.findProgram(&.{"openocd"}, &.{"C:\\Users\\jnbta\\.platformio\\packages\\tool-openocd\\bin"});
 
     // Absolute path to openocd.cfg
     const openocdcfg = b.path("build/openocd.cfg").getPath(b);
     const firmwarepath = b.getInstallPath(fw_install_step.dir, fw_install_step.dest_rel_path);
     const openocdcmds = try std.fmt.allocPrint(b.allocator, "program {s} verify reset exit", .{firmwarepath});
 
-    const flash_elf = b.addSystemCommand(&[_][]const u8{ "openocd", "-f", openocdcfg, "-c", openocdcmds });
+    const flash_elf = b.addSystemCommand(&[_][]const u8{ openocd, "-f", openocdcfg, "-c", openocdcmds });
 
     flash_elf.step.dependOn(b.getInstallStep());
 
