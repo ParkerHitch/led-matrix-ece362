@@ -6,10 +6,15 @@ const RCC = microzig.chip.peripherals.RCC;
 const ChipInit = @import("init/general.zig");
 
 extern fn enable_dma() void;
+extern fn get_peen(u8) u8;
 
 pub fn main() void {
     ChipInit.internal_clock();
     enable_dma();
+    const p: u8 = get_peen(0);
+    if (p != 'p') {
+        return;
+    }
 
     RCC.AHBENR.modify(.{
         .GPIOCEN = 1,
