@@ -1,5 +1,6 @@
 const std = @import("std");
 const microzig = @import("microzig");
+const CSource = std.Build.Module.CSourceFile;
 
 const MicroBuild = microzig.MicroBuild(.{
     .stm32 = true,
@@ -12,9 +13,30 @@ pub fn build(b: *std.Build) !void {
     const firmware = mb.add_firmware(.{
         .name = "hello",
         .target = mb.ports.stm32.chips.STM32F091RC,
-        .optimize = .ReleaseSmall,
+        .optimize = .Debug,
         .root_source_file = b.path("src/main.zig"),
     });
+
+    // -------
+    // Compile the C files
+    // -------
+    const c_compile_flags = [_][]const u8{ "-DSTM32F0", "-DSTM32F091xC" };
+
+    const cfile_dir = try std.fs.openDirAbsolute(b.path("cfiles/").getPath(b), .{ .iterate = true });
+    var cfile_walker = try cfile_dir.walk(b.allocator);
+    while (try cfile_walker.next()) |entry| {
+        if (entry.kind == .file) {
+            if (std.mem.eql(u8, entry.basename[entry.basename.len - 2 ..], ".c")) {
+                const dir_path = try entry.dir.realpathAlloc(b.allocator, ".");
+                const abspath = try std.fs.path.resolve(b.allocator, &.{ dir_path, entry.basename });
+                firmware.add_c_source_file(CSource{ .file = .{ .cwd_relative = abspath }, .flags = &c_compile_flags });
+            }
+        }
+    }
+    // Add CMSIS headers
+    firmware.add_include_path(b.path("CMSIS_5/CMSIS/Core/Include/"));
+    firmware.add_include_path(b.path("cmsis-device-f0/Include/"));
+
     const fw_install_step = mb.add_install_firmware(firmware, .{ .format = .elf });
     b.getInstallStep().dependOn(&fw_install_step.step);
 
