@@ -1,0 +1,10 @@
+[submodule "CMSIS_5"]
+	path = CMSIS_5
+	url = https://github.com/ARM-software/CMSIS_5.git
+	branch = master
+	shallow = true
+[submodule "cmsis-device-f0"]
+	path = cmsis-device-f0
+	url = https://github.com/STMicroelectronics/cmsis-device-f0.git
+	branch = master
+	shallow = true
