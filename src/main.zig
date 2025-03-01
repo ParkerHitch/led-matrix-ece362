@@ -7,6 +7,12 @@ const TestSR = LedMatrix.SrChain(2, 0b111);
 
 const ChipInit = @import("init/general.zig");
 
+pub const microzig_options = .{
+    .interrupts = .{
+        .DMA1_Ch4_7_DMA2_Ch3_5 = microzig.interrupt.Handler{ .C = LedMatrix.IRQ_DMA1_Ch4_7_DMA2_Ch3_5 },
+    },
+};
+
 const DebouncedBtn = struct {
     history: u8 = 0,
     state: u1 = 0,
@@ -38,6 +44,7 @@ pub fn main() void {
 
     peripherals.GPIOC.MODER.modify(.{
         .@"MODER[6]" = .Output,
+        .@"MODER[7]" = .Output,
     });
     peripherals.GPIOB.MODER.modify(.{
         .@"MODER[2]" = .Input,

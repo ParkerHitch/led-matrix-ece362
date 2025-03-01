@@ -6,12 +6,27 @@ const RCC = peripherals.RCC;
 const DMA2 = peripherals.DMA2;
 const SPI1 = peripherals.SPI1;
 const GPIOB = peripherals.GPIOB;
+const GPIOC = peripherals.GPIOC;
+
+pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
+    DMA2.IFCR.modify(.{
+        // NOTE: Same bug here. Gotta use 3 instead of 4 cuz microzig has 0
+        .@"TCIF[3]" = 1,
+    });
+    // Set NSS high now that we're done
+    GPIOB.ODR.modify(.{
+        .@"ODR[4]" = .High,
+    });
+}
 
 /// A struct representing an SPI interface to a chain of 8bit shift registers
-/// uses SPI1, pins B13 & B15
+/// uses SPI1, pins B3, 4, & 5 for SCLK, NSS/LE, & MOSI respectively
 ///     num_srs: the number of 8 bit shift registers in the chain
 ///     sysclock_divisor: the spi clock is sysclock / 2^(1+divisor)
-pub fn SrChain(num_srs: comptime_int, sysclock_divisor: u3) type {
+pub fn SrChain(
+    num_srs: comptime_int,
+    sysclock_divisor: u3,
+) type {
     return struct {
         const DMA2_CH4: *volatile periph_types.bdma_v2.CH = getDmaCh(DMA2, 4);
 
@@ -31,11 +46,15 @@ pub fn SrChain(num_srs: comptime_int, sysclock_divisor: u3) type {
             // Setup GPIOB
             GPIOB.MODER.modify(.{
                 .@"MODER[3]" = .Alternate,
+                .@"MODER[4]" = .Output,
                 .@"MODER[5]" = .Alternate,
             });
             GPIOB.AFR[1].modify(.{
                 .@"AFR[3]" = 0,
                 .@"AFR[5]" = 0,
+            });
+            GPIOB.ODR.modify(.{
+                .@"ODR[4]" = .High,
             });
 
             // Setup SPI1
@@ -76,17 +95,25 @@ pub fn SrChain(num_srs: comptime_int, sysclock_divisor: u3) type {
                 .MINC = 1,
                 .CIRC = 0,
                 .DIR = .FromMemory,
+                .TCIE = 1,
             });
 
             DMA2_CH4.PAR = @intFromPtr(&SPI1.DR16);
             DMA2_CH4.NDTR.modify(.{
                 .NDT = 0,
             });
+
+            // Enable interrupt
+            const ISER: *volatile u32 = @ptrFromInt(0xE000E100);
+            ISER.* = 1 << 11;
         }
 
         /// Begins an async shift opperation.
         /// Data must remain a valid pointer for the durration of the shift, as DMA will read from it
         pub fn startShift(data: *const [num_srs]u8) void {
+            GPIOB.ODR.modify(.{
+                .@"ODR[4]" = .Low,
+            });
             DMA2_CH4.CR.modify(.{
                 .EN = 0,
             });
@@ -100,10 +127,16 @@ pub fn SrChain(num_srs: comptime_int, sysclock_divisor: u3) type {
         }
 
         pub fn sendSync(data: *const [num_srs]u8) void {
+            GPIOB.ODR.modify(.{
+                .@"ODR[4]" = .Low,
+            });
             for (data) |byte| {
                 while (SPI1.SR.read().TXE == 0) {}
                 @as(*volatile u8, @ptrCast(&SPI1.DR16)).* = byte;
             }
+            GPIOB.ODR.modify(.{
+                .@"ODR[4]" = .High,
+            });
         }
     };
 }
