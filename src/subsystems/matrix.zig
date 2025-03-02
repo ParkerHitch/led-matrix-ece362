@@ -25,7 +25,7 @@ pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
 ///     sysclock_divisor: the spi clock is sysclock / 2^(1+divisor)
 pub fn SrChain(
     num_srs: comptime_int,
-    sysclock_divisor: u3,
+    sysclock_divisor: periph_types.spi_v2.BR,
 ) type {
     return struct {
         const DMA2_CH4: *volatile periph_types.bdma_v2.CH = getDmaCh(DMA2, 4);
@@ -65,8 +65,8 @@ pub fn SrChain(
                 .CPHA = .FirstEdge,
                 .CPOL = .IdleLow,
                 .MSTR = .Master,
-                .BR = @as(periph_types.spi_v2.BR, @enumFromInt(sysclock_divisor)),
-                .LSBFIRST = .MSBFirst,
+                .BR = sysclock_divisor,
+                .LSBFIRST = .LSBFirst,
             });
             SPI1.CR2.modify(.{
                 .TXDMAEN = 1,
@@ -74,6 +74,9 @@ pub fn SrChain(
                 .NSSP = 1,
                 .DS = .Bits8,
             });
+            // SPI1.CR1.modify(.{
+            //     .SPE = 1,
+            // });
             const cr1ptr: *volatile u32 = @ptrCast(&SPI1.CR1);
             cr1ptr.* |= 64;
 
@@ -143,4 +146,47 @@ pub fn SrChain(
 
 fn getDmaCh(dma: *volatile periph_types.bdma_v2.DMA, channel: comptime_int) *periph_types.bdma_v2.CH {
     return @ptrFromInt(@intFromPtr(&dma.CH) + 20 * (channel - 1));
+}
+
+pub const Led = struct {
+    r: u1,
+    g: u1,
+    b: u1,
+};
+
+pub fn LedData(num_leds: comptime_int) type {
+    const num_bytes = cielDiv(num_leds * 3, 8);
+    const first_bit = num_bytes * 8 - num_leds * 3;
+
+    return struct {
+        rawArr: [num_bytes]u8,
+
+        pub fn init_blank() @This() {
+            return .{
+                .rawArr = .{0} ** num_bytes,
+            };
+        }
+
+        pub fn set_led(self: *@This(), led_id: u32, val: Led) void {
+            self.set_bit(led_id * 3 + first_bit, val.b);
+            self.set_bit(led_id * 3 + first_bit + 1, val.g);
+            self.set_bit(led_id * 3 + first_bit + 2, val.r);
+        }
+
+        pub inline fn set_bit(self: *@This(), bit_id: u32, val: u1) void {
+            if (val == 1) {
+                self.rawArr[bit_id / 8] |= (@as(u8, 1) << @intCast(bit_id % 8));
+            } else {
+                self.rawArr[bit_id / 8] &= ~(@as(u8, 1) << @intCast(bit_id % 8));
+            }
+        }
+    };
+}
+
+fn cielDiv(a: comptime_int, b: comptime_int) comptime_int {
+    var out = a / b;
+    if (out * b < a) {
+        out += 1;
+    }
+    return out;
 }
