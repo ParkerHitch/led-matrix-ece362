@@ -4,7 +4,7 @@ const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 const LedMatrix = @import("subsystems/matrix.zig");
 
-const TestSR = LedMatrix.SrChain(3, .Div256);
+const TestSR = LedMatrix.SrChain(8, .Div4);
 
 const ChipInit = @import("init/general.zig");
 
@@ -31,8 +31,6 @@ const DebouncedBtn = struct {
 pub fn main() void {
     ChipInit.internal_clock();
 
-    TestSR.setup();
-
     var ledData = LedMatrix.LedData(8).init_blank();
 
     // const p: u8 = get_peen(0);
@@ -56,6 +54,10 @@ pub fn main() void {
         .@"PUPDR[2]" = .PullDown,
     });
 
+    peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .High });
+    TestSR.setup();
+    peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
+
     var SW3 = DebouncedBtn{};
     var last_state: u1 = 0;
     var id: u3 = 0;
@@ -70,8 +72,8 @@ pub fn main() void {
         } else {
             peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
         }
-        // if (SW3.state == 1 and last_state == 0) {
-        if (true) {
+        if (SW3.state == 1 and last_state == 0) {
+            // if (true) {
             ledData.set_led(id +% 7, .{ .r = 0, .g = 0, .b = 0 });
             ledData.set_led(id +% 6, .{ .r = 1, .g = 0, .b = 0 });
             ledData.set_led(id +% 5, .{ .r = 1, .g = 1, .b = 0 });
@@ -80,7 +82,7 @@ pub fn main() void {
             ledData.set_led(id +% 2, .{ .r = 0, .g = 0, .b = 1 });
             ledData.set_led(id +% 1, .{ .r = 1, .g = 0, .b = 1 });
             ledData.set_led(id +% 0, .{ .r = 1, .g = 1, .b = 1 });
-            TestSR.sendSync(&ledData.rawArr);
+            TestSR.startShift(&ledData.rawArr);
             // Wrapping addition
             id -%= 1;
         }

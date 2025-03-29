@@ -5,8 +5,10 @@ const periph_types = microzig.chip.types.peripherals;
 const RCC = peripherals.RCC;
 const DMA2 = peripherals.DMA2;
 const SPI1 = peripherals.SPI1;
+const GPIOA = peripherals.GPIOA;
 const GPIOB = peripherals.GPIOB;
 const GPIOC = peripherals.GPIOC;
+const TIM2 = peripherals.TIM2;
 
 pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
     DMA2.IFCR.modify(.{
@@ -19,14 +21,20 @@ pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
     });
 }
 
-/// A struct representing an SPI interface to a chain of 8bit shift registers
-/// uses SPI1, pins B3, 4, & 5 for SCLK, NSS/LE, & MOSI respectively
+/// A struct representing an SPI interface and an externally-connected timer
+/// that feed a chain of 8bit shift registers.
+/// Uses SPI1 and TIM2 +
+///     pins B3, & 5 for SCLK & MOSI respectively
+///     pin A0 & A1 for SCLK input & LE respectively
+/// Params:
 ///     num_srs: the number of 8 bit shift registers in the chain
 ///     sysclock_divisor: the spi clock is sysclock / 2^(1+divisor)
 pub fn SrChain(
-    num_srs: comptime_int,
+    num_leds: comptime_int,
     sysclock_divisor: periph_types.spi_v2.BR,
 ) type {
+    const num_srs = cielDiv(num_leds * 3, 8);
+    const bit_count = num_srs * 8;
     return struct {
         const DMA2_CH4: *volatile periph_types.bdma_v2.CH = getDmaCh(DMA2, 4);
 
@@ -37,7 +45,11 @@ pub fn SrChain(
             // Enable clocks
             RCC.AHBENR.modify(.{
                 .DMA2EN = 1,
+                .GPIOAEN = 1,
                 .GPIOBEN = 1,
+            });
+            RCC.APB1ENR.modify(.{
+                .TIM2EN = 1,
             });
             RCC.APB2ENR.modify(.{
                 .SPI1EN = 1,
@@ -46,15 +58,25 @@ pub fn SrChain(
             // Setup GPIOB
             GPIOB.MODER.modify(.{
                 .@"MODER[3]" = .Alternate,
-                .@"MODER[4]" = .Output,
                 .@"MODER[5]" = .Alternate,
             });
-            GPIOB.AFR[1].modify(.{
+            GPIOB.AFR[0].modify(.{
                 .@"AFR[3]" = 0,
                 .@"AFR[5]" = 0,
             });
-            GPIOB.ODR.modify(.{
-                .@"ODR[4]" = .High,
+            GPIOB.OSPEEDR.modify(.{
+                .@"OSPEEDR[3]" = .VeryHighSpeed,
+                .@"OSPEEDR[5]" = .VeryHighSpeed,
+            });
+
+            // Setup GPIOA
+            GPIOA.MODER.modify(.{
+                .@"MODER[0]" = .Alternate,
+                .@"MODER[1]" = .Alternate,
+            });
+            GPIOA.AFR[0].modify(.{
+                .@"AFR[0]" = 2,
+                .@"AFR[1]" = 2,
             });
 
             // Setup SPI1
@@ -77,8 +99,33 @@ pub fn SrChain(
             // SPI1.CR1.modify(.{
             //     .SPE = 1,
             // });
+            // Enable SPI
             const cr1ptr: *volatile u32 = @ptrCast(&SPI1.CR1);
             cr1ptr.* |= 64;
+
+            // Setup TIM2:
+            TIM2.SMCR.modify(.{
+                .ETP = .Inverted,
+                .ECE = 1,
+            });
+            // ccmr doesn't have a struct for when it's an output
+            const ccmr1ptr: *volatile u32 = @ptrCast(&TIM2.CCMR_Input[0]);
+            var ccmr1 = ccmr1ptr.*;
+            // Clear channel 2
+            ccmr1 &= 0xFF;
+            // PWM mode 1
+            ccmr1 |= 0b111 << 12;
+            ccmr1ptr.* = ccmr1;
+            TIM2.PSC = 0;
+            TIM2.ARR = bit_count - 1;
+            // Because of pwm mode 2, we are high when count >= CCR, so LE goes high when = bit count, then it resets
+            TIM2.CCR[1] = bit_count - 1;
+            TIM2.CCER.modify(.{
+                .@"CCE[1]" = 1,
+            });
+            TIM2.CR1.modify(.{
+                .CEN = 1,
+            });
 
             // Setup DMA
             // Configure to respond to SPI requests only
@@ -107,8 +154,8 @@ pub fn SrChain(
             });
 
             // Enable interrupt
-            const ISER: *volatile u32 = @ptrFromInt(0xE000E100);
-            ISER.* = 1 << 11;
+            // const ISER: *volatile u32 = @ptrFromInt(0xE000E100);
+            // ISER.* = 1 << 11;
         }
 
         /// Begins an async shift opperation.
@@ -130,16 +177,17 @@ pub fn SrChain(
         }
 
         pub fn sendSync(data: *const [num_srs]u8) void {
-            GPIOB.ODR.modify(.{
-                .@"ODR[4]" = .Low,
-            });
+            // GPIOB.ODR.modify(.{
+            //     .@"ODR[4]" = .Low,
+            // });
             for (data) |byte| {
                 while (SPI1.SR.read().TXE == 0) {}
                 @as(*volatile u8, @ptrCast(&SPI1.DR16)).* = byte;
             }
-            GPIOB.ODR.modify(.{
-                .@"ODR[4]" = .High,
-            });
+            // while (SPI1.SR.read().BSY == 1) {}
+            // GPIOB.ODR.modify(.{
+            //     .@"ODR[4]" = .High,
+            // });
         }
     };
 }
