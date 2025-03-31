@@ -130,8 +130,8 @@ pub fn SrChain(
             // Setup DMA
             // Configure to respond to SPI requests only
             // See Table 33.
-            // NOTE: MICROZIG IS BUGGED!! IT HAS A CS[0] FIELD, SO EVERYTHING IS OFF BY 1 HERE
-            // SO EVEN THO WE ARE USING CHANNEL 4, WE GOTTA USE FIELD CS[3]
+            // NOTE: MICROZIG IS BUGGED!! IT HAS A CS[0] FIELayerData, SO EVERYTHING IS OFF BY 1 HERE
+            // SO EVEN THO WE ARE USING CHANNEL 4, WE GOTTA USE FIELayerData CS[3]
             DMA2.CSELR.modify(.{
                 .@"CS[3]" = 0b0011,
             });
@@ -143,7 +143,7 @@ pub fn SrChain(
                 .MSIZE = .Bits8,
                 .PL = .VeryHigh,
                 .MINC = 1,
-                .CIRC = 0,
+                .CIRC = 1,
                 .DIR = .FromMemory,
                 .TCIE = 1,
             });
@@ -196,39 +196,65 @@ fn getDmaCh(dma: *volatile periph_types.bdma_v2.DMA, channel: comptime_int) *per
     return @ptrFromInt(@intFromPtr(&dma.CH) + 20 * (channel - 1));
 }
 
-pub const Led = struct {
+pub const Led = packed struct {
     r: u1,
     g: u1,
     b: u1,
 };
 
-pub fn LedData(num_leds: comptime_int) type {
-    const num_bytes = cielDiv(num_leds * 3, 8);
-    const first_bit = num_bytes * 8 - num_leds * 3;
+pub const Color = enum { R, G, B };
 
-    return struct {
-        rawArr: [num_bytes]u8,
+pub const LayerData = extern struct {
+    layerId: u8,
+    srs: [24]u8 = .{0} ** 24,
 
-        pub fn init_blank() @This() {
-            return .{
-                .rawArr = .{0} ** num_bytes,
-            };
+    // pub const RowView = packed struct(u24) { led0: Led, led1: Led, led2: Led, led3: Led, led4: Led, led5: Led, led6: Led, led7: Led };
+};
+
+pub const Frame = extern struct {
+    layers: [8]LayerData = defaultLayers: {
+        var layers: [8]LayerData = .{LayerData{ .layerId = 0 }} ** 8;
+        for (0..8) |i| {
+            layers[i].layerId = i;
         }
+        break :defaultLayers layers;
+    },
 
-        pub fn set_led(self: *@This(), led_id: u32, val: Led) void {
-            self.set_bit(led_id * 3 + first_bit, val.b);
-            self.set_bit(led_id * 3 + first_bit + 1, val.g);
-            self.set_bit(led_id * 3 + first_bit + 2, val.r);
-        }
+    /// Right-handed coordinates where z is up
+    pub fn set_pixel(self: *Frame, x: u3, y: u3, z: u3, color: Led) void {
+        var row: u24 = @bitCast(self.layers[z].srs[3 * (7 - y) ..][0..3].*);
+        row &= ~(@as(u24, 0b111) << (x * 3));
+        row |= (@as(u24, @intCast(@as(u3, @bitCast(color)))) << (x * 3));
+        self.layers[z].srs[3 * (7 - y) ..][0..3].* = @bitCast(row);
+    }
 
-        pub inline fn set_bit(self: *@This(), bit_id: u32, val: u1) void {
-            if (val == 1) {
-                self.rawArr[bit_id / 8] |= (@as(u8, 1) << @intCast(bit_id % 8));
-            } else {
-                self.rawArr[bit_id / 8] &= ~(@as(u8, 1) << @intCast(bit_id % 8));
-            }
-        }
-    };
+    pub fn set_channel(self: *Frame, x: u3, y: u3, z: u3, channel: Color, val: u1) void {
+        const bitoffset: u8 = (x * 3 + @intFromEnum(channel));
+        const srptr: *u8 = &self.layers[z].srs[bitoffset / 8 + (3 * (7 - y))];
+
+        srptr.* &= ~(@as(u8, 1) << @intCast(bitoffset % 8));
+        srptr.* |= (@as(u8, val) << @intCast(bitoffset % 8));
+    }
+};
+
+// Way harder to put this inside a test block, as those need to run on the machine, which is the microcontroller
+// Random comptime block works just as well for this memory layout stuff
+comptime {
+    // Assert that our layers have the correct memory map
+    std.debug.assert(@import("builtin").target.cpu.arch.endian() == std.builtin.Endian.little);
+    std.debug.assert(@sizeOf(LayerData) == 25);
+    std.debug.assert(@offsetOf(LayerData, "layerId") == 0);
+    std.debug.assert(@offsetOf(LayerData, "srs") == 1);
+    // Assert that our frames have the correct memory map
+    std.debug.assert(@sizeOf(Frame) == 25 * 8);
+}
+
+comptime {
+    var frame: Frame = .{};
+    frame.set_pixel(2, 7, 0, .{ .r = 1, .g = 1, .b = 1 });
+    // @compileLog(frame.layers[0].srs);
+    std.debug.assert(frame.layers[0].srs[0] == 0xC0);
+    std.debug.assert(frame.layers[0].srs[1] == 0x01);
 }
 
 fn cielDiv(a: comptime_int, b: comptime_int) comptime_int {

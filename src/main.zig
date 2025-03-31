@@ -31,12 +31,7 @@ const DebouncedBtn = struct {
 pub fn main() void {
     ChipInit.internal_clock();
 
-    var ledData = LedMatrix.LedData(8).init_blank();
-
-    // const p: u8 = get_peen(0);
-    // if (p != 'p') {
-    //     return;
-    // }
+    var frame = LedMatrix.Frame{};
 
     RCC.AHBENR.modify(.{
         .GPIOBEN = 1,
@@ -73,16 +68,17 @@ pub fn main() void {
             peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
         }
         if (SW3.state == 1 and last_state == 0) {
+            TestSR.startShift(frame.layers[0].srs[0..3]);
             // if (true) {
-            ledData.set_led(id +% 7, .{ .r = 0, .g = 0, .b = 0 });
-            ledData.set_led(id +% 6, .{ .r = 1, .g = 0, .b = 0 });
-            ledData.set_led(id +% 5, .{ .r = 1, .g = 1, .b = 0 });
-            ledData.set_led(id +% 4, .{ .r = 0, .g = 1, .b = 0 });
-            ledData.set_led(id +% 3, .{ .r = 0, .g = 1, .b = 1 });
-            ledData.set_led(id +% 2, .{ .r = 0, .g = 0, .b = 1 });
-            ledData.set_led(id +% 1, .{ .r = 1, .g = 0, .b = 1 });
-            ledData.set_led(id +% 0, .{ .r = 1, .g = 1, .b = 1 });
-            TestSR.startShift(&ledData.rawArr);
+            // ledData.set_led(id +% 7, .{ .r = 0, .g = 0, .b = 0 });
+            // ledData.set_led(id +% 6, .{ .r = 1, .g = 0, .b = 0 });
+            // ledData.set_led(id +% 5, .{ .r = 1, .g = 1, .b = 0 });
+            // ledData.set_led(id +% 4, .{ .r = 0, .g = 1, .b = 0 });
+            // ledData.set_led(id +% 3, .{ .r = 0, .g = 1, .b = 1 });
+            // ledData.set_led(id +% 2, .{ .r = 0, .g = 0, .b = 1 });
+            // ledData.set_led(id +% 1, .{ .r = 1, .g = 0, .b = 1 });
+            // ledData.set_led(id +% 0, .{ .r = 1, .g = 1, .b = 1 });
+            // TestSR.startShift(&ledData.rawArr);
             // Wrapping addition
             id -%= 1;
         }
