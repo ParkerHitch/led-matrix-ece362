@@ -9,11 +9,14 @@ const MicroBuild = microzig.MicroBuild(.{
 pub fn build(b: *std.Build) !void {
     const mz_dep = b.dependency("microzig", .{});
     const mb = MicroBuild.init(b, mz_dep) orelse return;
+    const stmTarget: *const microzig.Target = mb.ports.stm32.chips.STM32F091RC;
+
+    const optimize = b.standardOptimizeOption(.{});
 
     const firmware = mb.add_firmware(.{
         .name = "hello",
-        .target = mb.ports.stm32.chips.STM32F091RC,
-        .optimize = .Debug,
+        .target = stmTarget,
+        .optimize = optimize,
         .root_source_file = b.path("src/main.zig"),
     });
 
@@ -38,6 +41,9 @@ pub fn build(b: *std.Build) !void {
     firmware.add_include_path(b.path("cmsis-device-f0/Include/"));
     firmware.add_include_path(b.path("include/"));
 
+    // -------
+    // Firmware install step
+    // -------
     const fw_install_step = mb.add_install_firmware(firmware, .{ .format = .elf });
     b.getInstallStep().dependOn(&fw_install_step.step);
 
