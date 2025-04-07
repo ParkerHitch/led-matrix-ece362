@@ -21,6 +21,8 @@ pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
     });
 }
 
+const DMA2_CH4: *volatile periph_types.bdma_v2.CH = getDmaCh(DMA2, 4);
+
 /// A struct representing an SPI interface and an externally-connected timer
 /// that feed a chain of 8bit shift registers.
 /// Uses SPI1 and TIM2 +
@@ -30,14 +32,11 @@ pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
 ///     num_srs: the number of 8 bit shift registers in the chain
 ///     sysclock_divisor: the spi clock is sysclock / 2^(1+divisor)
 pub fn SrChain(
-    num_leds: comptime_int,
+    num_srs: comptime_int,
     sysclock_divisor: periph_types.spi_v2.BR,
 ) type {
-    const num_srs = cielDiv(num_leds * 3, 8);
     const bit_count = num_srs * 8;
     return struct {
-        const DMA2_CH4: *volatile periph_types.bdma_v2.CH = getDmaCh(DMA2, 4);
-
         /// Enables & condigures GPIOB
         /// Enables & configures SPI1
         /// Configures, but does not enable DMA2
@@ -160,23 +159,31 @@ pub fn SrChain(
 
         /// Begins an async shift opperation.
         /// Data must remain a valid pointer for the durration of the shift, as DMA will read from it
-        pub fn startShift(data: *const [num_srs]u8) void {
+        fn startShift(data: *const [num_srs]u8) void {
             GPIOB.ODR.modify(.{
                 .@"ODR[4]" = .Low,
             });
             DMA2_CH4.CR.modify(.{
                 .EN = 0,
             });
+            TIM2.CR1.modify(.{
+                .CEN = 0,
+            });
+            // Wait for SPI to finish
+            while (SPI1.read().BSY == 1) {}
+
             DMA2_CH4.MAR = @intFromPtr(data);
             DMA2_CH4.NDTR.modify(.{
                 .NDT = num_srs,
             });
+            TIM2.CNT = 0;
+
             DMA2_CH4.CR.modify(.{
                 .EN = 1,
             });
         }
 
-        pub fn sendSync(data: *const [num_srs]u8) void {
+        fn sendSync(data: *const [num_srs]u8) void {
             // GPIOB.ODR.modify(.{
             //     .@"ODR[4]" = .Low,
             // });
@@ -190,6 +197,25 @@ pub fn SrChain(
             // });
         }
     };
+}
+
+/// Begins an async shift opperation.
+/// Data must remain a valid pointer for the durration of the shift, as DMA will read from it
+pub fn startShift(data: *const Frame) void {
+    comptime std.debug.assert(@sizeOf(Frame) == (25 * 8));
+    GPIOB.ODR.modify(.{
+        .@"ODR[4]" = .Low,
+    });
+    DMA2_CH4.CR.modify(.{
+        .EN = 0,
+    });
+    DMA2_CH4.MAR = @intFromPtr(data);
+    DMA2_CH4.NDTR.modify(.{
+        .NDT = 25 * 8,
+    });
+    DMA2_CH4.CR.modify(.{
+        .EN = 1,
+    });
 }
 
 fn getDmaCh(dma: *volatile periph_types.bdma_v2.DMA, channel: comptime_int) *periph_types.bdma_v2.CH {

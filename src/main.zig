@@ -4,7 +4,7 @@ const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 const LedMatrix = @import("subsystems/matrix.zig");
 
-const TestSR = LedMatrix.SrChain(8, .Div4);
+const TestSR = LedMatrix.SrChain(25, .Div256);
 
 const ChipInit = @import("init/general.zig");
 
@@ -28,10 +28,23 @@ const DebouncedBtn = struct {
     }
 };
 
+const Pattern = enum {
+    NOTHING,
+    ALL_WHITE,
+    ALL_RED,
+    ALL_GREEN,
+    ALL_BLUE,
+    AXIS, // Red on x axis, g on y, b on z, white on origin. Check handedness
+    RAINBOW,
+};
+const numPatterns = @typeInfo(Pattern).Enum.fields.len;
+
 pub fn main() void {
     ChipInit.internal_clock();
 
     var frame = LedMatrix.Frame{};
+    var activePattern: u32 = 0;
+    setPattern(&frame, activePattern);
 
     RCC.AHBENR.modify(.{
         .GPIOBEN = 1,
@@ -50,15 +63,15 @@ pub fn main() void {
     });
 
     peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .High });
+    // Clunky. Will clean up later. Didn't realize we had way more data than SRs skull emoji
     TestSR.setup();
     peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
 
     var SW3 = DebouncedBtn{};
     var last_state: u1 = 0;
-    var id: u3 = 0;
 
     while (true) {
-        for (0..150_000) |_| {
+        for (0..20_000) |_| {
             asm volatile ("nop");
         }
         SW3.update(@intFromEnum(peripherals.GPIOB.IDR.read().@"IDR[2]"));
@@ -68,20 +81,54 @@ pub fn main() void {
             peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
         }
         if (SW3.state == 1 and last_state == 0) {
-            TestSR.startShift(frame.layers[0].srs[0..3]);
-            // if (true) {
-            // ledData.set_led(id +% 7, .{ .r = 0, .g = 0, .b = 0 });
-            // ledData.set_led(id +% 6, .{ .r = 1, .g = 0, .b = 0 });
-            // ledData.set_led(id +% 5, .{ .r = 1, .g = 1, .b = 0 });
-            // ledData.set_led(id +% 4, .{ .r = 0, .g = 1, .b = 0 });
-            // ledData.set_led(id +% 3, .{ .r = 0, .g = 1, .b = 1 });
-            // ledData.set_led(id +% 2, .{ .r = 0, .g = 0, .b = 1 });
-            // ledData.set_led(id +% 1, .{ .r = 1, .g = 0, .b = 1 });
-            // ledData.set_led(id +% 0, .{ .r = 1, .g = 1, .b = 1 });
-            // TestSR.startShift(&ledData.rawArr);
-            // Wrapping addition
-            id -%= 1;
+            // increment pattern
+            activePattern = (activePattern + 1) % numPatterns;
+            setPattern(&frame, activePattern);
+            LedMatrix.startShift(&@bitCast(frame));
         }
         last_state = SW3.state;
+    }
+}
+
+fn setPattern(frame: *LedMatrix.Frame, id: u32) void {
+    const newPattern: Pattern = @enumFromInt(id);
+    switch (newPattern) {
+        .NOTHING => {
+            frame.* = LedMatrix.Frame{};
+        },
+        .ALL_WHITE, .ALL_BLUE, .ALL_GREEN, .ALL_RED => {
+            for (0..8) |x| {
+                for (0..8) |y| {
+                    for (0..8) |z| {
+                        frame.set_pixel(@intCast(x), @intCast(y), @intCast(z), switch (newPattern) {
+                            .ALL_WHITE => .{ .r = 1, .g = 1, .b = 1 },
+                            .ALL_BLUE => .{ .r = 0, .g = 0, .b = 1 },
+                            .ALL_GREEN => .{ .r = 0, .g = 1, .b = 0 },
+                            .ALL_RED => .{ .r = 1, .g = 0, .b = 0 },
+                            else => unreachable,
+                        });
+                    }
+                }
+            }
+        },
+        .AXIS => {
+            frame.set_pixel(0, 0, 0, .{ .r = 1, .g = 1, .b = 1 });
+            for (1..8) |i| {
+                frame.set_pixel(@intCast(i), 0, 0, .{ .r = 1, .g = 0, .b = 0 });
+                frame.set_pixel(0, @intCast(i), 0, .{ .r = 0, .g = 1, .b = 0 });
+                frame.set_pixel(0, 0, @intCast(i), .{ .r = 0, .g = 0, .b = 1 });
+            }
+        },
+        .RAINBOW => {
+            for (0..8) |x| {
+                for (0..8) |y| {
+                    for (0..8) |z| {
+                        const sum: u8 = @intCast(x + y + z);
+                        const color: u3 = @intCast(sum & 0b111);
+                        frame.set_pixel(@intCast(x), @intCast(y), @intCast(z), @bitCast(color));
+                    }
+                }
+            }
+        },
     }
 }
