@@ -9,13 +9,14 @@ const MicroBuild = microzig.MicroBuild(.{
 pub fn build(b: *std.Build) !void {
     const mz_dep = b.dependency("microzig", .{});
     const mb = MicroBuild.init(b, mz_dep) orelse return;
-    const stmTarget: *const microzig.Target = mb.ports.stm32.chips.STM32F091RC;
+    const mzTarget: *const microzig.Target = mb.ports.stm32.chips.STM32F091RC;
+    // const zigTarget = b.resolveTargetQuery(mzTarget.chip.cpu);
 
     const optimize = b.standardOptimizeOption(.{});
 
     const firmware = mb.add_firmware(.{
         .name = "hello",
-        .target = stmTarget,
+        .target = mzTarget,
         .optimize = optimize,
         .root_source_file = b.path("src/main.zig"),
     });
@@ -39,7 +40,8 @@ pub fn build(b: *std.Build) !void {
     // Add CMSIS headers
     firmware.add_include_path(b.path("CMSIS_5/CMSIS/Core/Include/"));
     firmware.add_include_path(b.path("cmsis-device-f0/Include/"));
-    firmware.add_include_path(b.path("include/"));
+    firmware.add_include_path(b.path("include"));
+    firmware.app_mod.addIncludePath(b.path("include"));
 
     // -------
     // Firmware install step

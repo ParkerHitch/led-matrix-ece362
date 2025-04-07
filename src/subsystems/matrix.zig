@@ -1,5 +1,6 @@
 const microzig = @import("microzig");
 const std = @import("std");
+const cImport = @import("../cImport.zig");
 const peripherals = microzig.chip.peripherals;
 const periph_types = microzig.chip.types.peripherals;
 const RCC = peripherals.RCC;
@@ -207,11 +208,9 @@ pub const Color = enum { R, G, B };
 pub const LayerData = extern struct {
     layerId: u8,
     srs: [24]u8 = .{0} ** 24,
-
-    // pub const RowView = packed struct(u24) { led0: Led, led1: Led, led2: Led, led3: Led, led4: Led, led5: Led, led6: Led, led7: Led };
 };
 
-pub const Frame = extern struct {
+pub const FrameBuffer = extern struct {
     layers: [8]LayerData = defaultLayers: {
         var layers: [8]LayerData = .{LayerData{ .layerId = 0 }} ** 8;
         for (0..8) |i| {
@@ -221,19 +220,23 @@ pub const Frame = extern struct {
     },
 
     /// Right-handed coordinates where z is up
-    pub fn set_pixel(self: *Frame, x: u3, y: u3, z: u3, color: Led) void {
+    pub fn set_pixel(self: *FrameBuffer, x: u3, y: u3, z: u3, color: Led) void {
         var row: u24 = @bitCast(self.layers[z].srs[3 * (7 - y) ..][0..3].*);
         row &= ~(@as(u24, 0b111) << (x * 3));
         row |= (@as(u24, @intCast(@as(u3, @bitCast(color)))) << (x * 3));
         self.layers[z].srs[3 * (7 - y) ..][0..3].* = @bitCast(row);
     }
 
-    pub fn set_channel(self: *Frame, x: u3, y: u3, z: u3, channel: Color, val: u1) void {
+    pub fn set_channel(self: *FrameBuffer, x: u3, y: u3, z: u3, channel: Color, val: u1) void {
         const bitoffset: u8 = (x * 3 + @intFromEnum(channel));
         const srptr: *u8 = &self.layers[z].srs[bitoffset / 8 + (3 * (7 - y))];
 
         srptr.* &= ~(@as(u8, 1) << @intCast(bitoffset % 8));
         srptr.* |= (@as(u8, val) << @intCast(bitoffset % 8));
+    }
+
+    pub fn cPtr(self: *FrameBuffer) *cImport.cFrameBuffer {
+        return @ptrCast(self);
     }
 };
 
@@ -246,13 +249,14 @@ comptime {
     std.debug.assert(@offsetOf(LayerData, "layerId") == 0);
     std.debug.assert(@offsetOf(LayerData, "srs") == 1);
     // Assert that our frames have the correct memory map
-    std.debug.assert(@sizeOf(Frame) == 25 * 8);
+    std.debug.assert(@sizeOf(FrameBuffer) == 25 * 8);
 }
 
 comptime {
-    var frame: Frame = .{};
+    var frame: FrameBuffer = .{};
     frame.set_pixel(2, 7, 0, .{ .r = 1, .g = 1, .b = 1 });
     // @compileLog(frame.layers[0].srs);
+    std.debug.assert(frame.layers[0].layerId == 0);
     std.debug.assert(frame.layers[0].srs[0] == 0xC0);
     std.debug.assert(frame.layers[0].srs[1] == 0x01);
 }
