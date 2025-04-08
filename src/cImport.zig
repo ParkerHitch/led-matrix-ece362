@@ -1,6 +1,7 @@
 const std = @import("std");
 const cfiles = @cImport(@cInclude("application.h"));
 const matrix = @import("subsystems/matrix.zig");
+const cAppNames = @import("options").cApps;
 
 pub const cmsis = @cImport({
     // See: https://ziggit.dev/t/exploring-zig-on-stm32-with-freertos/4653
@@ -17,7 +18,14 @@ pub const cLayerData = cfiles.LayerData;
 
 pub const Application = cfiles.Application;
 
-pub const cApps: [1]*Application = .{@extern(*Application, .{ .name = "myApp" })};
+pub const cApps: [cAppNames.len]*Application = genExtern: {
+    var apps: []const *Application = &.{};
+    for (cAppNames) |appName| {
+        // @compileLog(appName);
+        apps = apps ++ .{@extern(*Application, .{ .name = appName })};
+    }
+    break :genExtern apps[0..cAppNames.len].*;
+};
 
 // Proper interoperability assertions
 comptime {
