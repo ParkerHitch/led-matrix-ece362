@@ -39,6 +39,8 @@ pub fn build(b: *std.Build) !void {
     // Add CMSIS headers
     firmware.add_include_path(b.path("CMSIS_5/CMSIS/Core/Include/"));
     firmware.add_include_path(b.path("cmsis-device-f0/Include/"));
+    firmware.app_mod.addIncludePath(b.path("CMSIS_5/CMSIS/Core/Include/"));
+    firmware.app_mod.addIncludePath(b.path("cmsis-device-f0/Include/"));
     firmware.add_include_path(b.path("include/"));
 
     // -------

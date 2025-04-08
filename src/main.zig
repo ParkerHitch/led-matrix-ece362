@@ -4,8 +4,6 @@ const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 const LedMatrix = @import("subsystems/matrix.zig");
 
-const TestSR = LedMatrix.SrChain(25, .Div256);
-
 const ChipInit = @import("init/general.zig");
 
 pub const microzig_options = .{
@@ -64,11 +62,12 @@ pub fn main() void {
 
     peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .High });
     // Clunky. Will clean up later. Didn't realize we had way more data than SRs skull emoji
-    TestSR.setup();
+    LedMatrix.init(.Div4);
     peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
 
     var SW3 = DebouncedBtn{};
     var last_state: u1 = 0;
+    LedMatrix.startShift(&@bitCast(frame));
 
     while (true) {
         for (0..20_000) |_| {
@@ -112,6 +111,7 @@ fn setPattern(frame: *LedMatrix.Frame, id: u32) void {
             }
         },
         .AXIS => {
+            frame.* = LedMatrix.Frame{};
             frame.set_pixel(0, 0, 0, .{ .r = 1, .g = 1, .b = 1 });
             for (1..8) |i| {
                 frame.set_pixel(@intCast(i), 0, 0, .{ .r = 1, .g = 0, .b = 0 });
