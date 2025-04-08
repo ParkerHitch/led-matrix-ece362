@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const microzig = @import("microzig");
 const CSource = std.Build.Module.CSourceFile;
 
@@ -52,8 +53,16 @@ pub fn build(b: *std.Build) !void {
     // -----------
     // Flash step
     // -----------
-    //
-    const openocd = try b.findProgram(&.{"openocd"}, &.{"C:\\Users\\jnbta\\.platformio\\packages\\tool-openocd\\bin"});
+
+    var envMap = try std.process.getEnvMap(b.allocator);
+    defer envMap.deinit();
+    const homePath =
+        if (builtin.target.os.tag == .macos or builtin.target.os.tag == .linux) envMap.get("HOME").? else if (builtin.target.os.tag == .windows) envMap.get("USERPROFILE").? else @compileError("Building on unsupported OS. Like actually what are you doing? Why are you not running windows, mac, or linux?");
+
+    const openocdPath = try std.fs.path.resolve(b.allocator, &.{ homePath, ".platformio", "packages", "tool-openocd", "bin" });
+    std.debug.print("Home dir: {s}\nOpenocd dir: {s}\n", .{ homePath, openocdPath });
+    defer b.allocator.free(openocdPath);
+    const openocd = try b.findProgram(&.{"openocd"}, &.{openocdPath});
 
     // Absolute path to openocd.cfg
     const openocdcfg = b.path("build/openocd.cfg").getPath(b);
