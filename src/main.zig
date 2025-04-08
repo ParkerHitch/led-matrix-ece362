@@ -21,6 +21,8 @@ comptime {
 pub fn main() void {
     ChipInit.internal_clock();
 
+    LedMatrix.init(.Div4);
+
     var buffer1: FrameBuffer = .{};
     var buffer2: FrameBuffer = .{};
     var currentBuffer = &buffer1;

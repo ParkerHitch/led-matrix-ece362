@@ -1,10 +1,18 @@
+/// matrix.zig
+/// The subsystem responsible for displaying to the cube.
+/// Consists of an SPI interface and an SCLK-driven timer that feed a chain of 8bit shift registers.
+/// Uses SPI1 and TIM2 +
+///     pins B3, & 5 for SCLK & MOSI respectively
+///     pin A0 & A1 for SCLK input & LE respectively
 const microzig = @import("microzig");
 const std = @import("std");
 const cImport = @import("../cImport.zig");
+const cmsis = cImport.cmsis;
 const peripherals = microzig.chip.peripherals;
 const periph_types = microzig.chip.types.peripherals;
 const RCC = peripherals.RCC;
 const DMA2 = peripherals.DMA2;
+const DMA2_CH4: *volatile periph_types.bdma_v2.CH = getDmaCh(DMA2, 4);
 const SPI1 = peripherals.SPI1;
 const GPIOA = peripherals.GPIOA;
 const GPIOB = peripherals.GPIOB;
@@ -16,181 +24,154 @@ pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
         // NOTE: Same bug here. Gotta use 3 instead of 4 cuz microzig has 0
         .@"TCIF[3]" = 1,
     });
-    // Set NSS high now that we're done
-    GPIOB.ODR.modify(.{
-        .@"ODR[4]" = .High,
-    });
 }
 
-/// A struct representing an SPI interface and an externally-connected timer
-/// that feed a chain of 8bit shift registers.
-/// Uses SPI1 and TIM2 +
-///     pins B3, & 5 for SCLK & MOSI respectively
-///     pin A0 & A1 for SCLK input & LE respectively
+/// Setup the display
 /// Params:
-///     num_srs: the number of 8 bit shift registers in the chain
-///     sysclock_divisor: the spi clock is sysclock / 2^(1+divisor)
-pub fn SrChain(
-    num_leds: comptime_int,
-    sysclock_divisor: periph_types.spi_v2.BR,
-) type {
-    const num_srs = cielDiv(num_leds * 3, 8);
+///     sysclock_divisor: an enum of the form .Div2 to .Div256 (powers of 2)
+///         default should be .Div4
+///         SCLK will have a frequency of sysclock (48 Mhz) divided by this number
+pub fn init(sysclock_divisor: periph_types.spi_v2.BR) void {
+    const num_srs = 25;
     const bit_count = num_srs * 8;
-    return struct {
-        const DMA2_CH4: *volatile periph_types.bdma_v2.CH = getDmaCh(DMA2, 4);
+    // Enable clocks
+    RCC.AHBENR.modify(.{
+        .DMA2EN = 1,
+        .GPIOAEN = 1,
+        .GPIOBEN = 1,
+    });
+    RCC.APB1ENR.modify(.{
+        .TIM2EN = 1,
+    });
+    RCC.APB2ENR.modify(.{
+        .SPI1EN = 1,
+    });
 
-        /// Enables & condigures GPIOB
-        /// Enables & configures SPI1
-        /// Configures, but does not enable DMA2
-        pub fn setup() void {
-            // Enable clocks
-            RCC.AHBENR.modify(.{
-                .DMA2EN = 1,
-                .GPIOAEN = 1,
-                .GPIOBEN = 1,
-            });
-            RCC.APB1ENR.modify(.{
-                .TIM2EN = 1,
-            });
-            RCC.APB2ENR.modify(.{
-                .SPI1EN = 1,
-            });
+    // Setup GPIOB
+    GPIOB.MODER.modify(.{
+        .@"MODER[3]" = .Alternate,
+        .@"MODER[5]" = .Alternate,
+    });
+    GPIOB.AFR[0].modify(.{
+        .@"AFR[3]" = 0,
+        .@"AFR[5]" = 0,
+    });
+    GPIOB.OSPEEDR.modify(.{
+        .@"OSPEEDR[3]" = .VeryHighSpeed,
+        .@"OSPEEDR[5]" = .VeryHighSpeed,
+    });
 
-            // Setup GPIOB
-            GPIOB.MODER.modify(.{
-                .@"MODER[3]" = .Alternate,
-                .@"MODER[5]" = .Alternate,
-            });
-            GPIOB.AFR[0].modify(.{
-                .@"AFR[3]" = 0,
-                .@"AFR[5]" = 0,
-            });
-            GPIOB.OSPEEDR.modify(.{
-                .@"OSPEEDR[3]" = .VeryHighSpeed,
-                .@"OSPEEDR[5]" = .VeryHighSpeed,
-            });
+    // Setup GPIOA
+    GPIOA.MODER.modify(.{
+        .@"MODER[0]" = .Alternate,
+        .@"MODER[1]" = .Alternate,
+    });
+    GPIOA.AFR[0].modify(.{
+        .@"AFR[0]" = 2,
+        .@"AFR[1]" = 2,
+    });
 
-            // Setup GPIOA
-            GPIOA.MODER.modify(.{
-                .@"MODER[0]" = .Alternate,
-                .@"MODER[1]" = .Alternate,
-            });
-            GPIOA.AFR[0].modify(.{
-                .@"AFR[0]" = 2,
-                .@"AFR[1]" = 2,
-            });
+    // Setup SPI1
+    SPI1.CR1.modify(.{
+        .SPE = 0,
+    });
+    SPI1.CR1.modify(.{
+        .CPHA = .FirstEdge,
+        .CPOL = .IdleLow,
+        .MSTR = .Master,
+        .BR = sysclock_divisor,
+        .LSBFIRST = .MSBFirst,
+    });
+    SPI1.CR2.modify(.{
+        .TXDMAEN = 1,
+        .SSOE = 1,
+        .NSSP = 1,
+        .DS = .Bits8,
+    });
+    // Enable SPI
+    SPI1.CR1.modify(.{
+        .SPE = 1,
+    });
 
-            // Setup SPI1
-            SPI1.CR1.modify(.{
-                .SPE = 0,
-            });
-            SPI1.CR1.modify(.{
-                .CPHA = .FirstEdge,
-                .CPOL = .IdleLow,
-                .MSTR = .Master,
-                .BR = sysclock_divisor,
-                .LSBFIRST = .LSBFirst,
-            });
-            SPI1.CR2.modify(.{
-                .TXDMAEN = 1,
-                .SSOE = 1,
-                .NSSP = 1,
-                .DS = .Bits8,
-            });
-            // SPI1.CR1.modify(.{
-            //     .SPE = 1,
-            // });
-            // Enable SPI
-            const cr1ptr: *volatile u32 = @ptrCast(&SPI1.CR1);
-            cr1ptr.* |= 64;
+    // Setup TIM2:
+    TIM2.SMCR.modify(.{
+        .ETP = .Inverted,
+        .ECE = 1,
+    });
+    // ccmr doesn't have a struct for when it's an output
+    const ccmr1ptr: *volatile u32 = @ptrCast(&TIM2.CCMR_Input[0]);
+    var ccmr1 = ccmr1ptr.*;
+    // Clear everything to do with channel 2
+    ccmr1 &= ~(cmsis.TIM_CCMR1_CC2S | cmsis.TIM_CCMR1_OC2FE | cmsis.TIM_CCMR1_OC2PE | cmsis.TIM_CCMR1_OC2CE);
+    // PWM mode 2
+    ccmr1 |= cmsis.TIM_CCMR1_OC2M_Msk;
+    ccmr1ptr.* = ccmr1;
+    TIM2.PSC = 0;
+    TIM2.ARR = bit_count - 1;
+    // Because of pwm mode 2, we are high when count >= CCR, so LE goes high when = bit count, then it resets
+    TIM2.CCR[1] = bit_count - 1;
+    TIM2.CCER.modify(.{
+        .@"CCE[1]" = 1,
+    });
+    TIM2.CR1.modify(.{
+        .CEN = 1,
+    });
 
-            // Setup TIM2:
-            TIM2.SMCR.modify(.{
-                .ETP = .Inverted,
-                .ECE = 1,
-            });
-            // ccmr doesn't have a struct for when it's an output
-            const ccmr1ptr: *volatile u32 = @ptrCast(&TIM2.CCMR_Input[0]);
-            var ccmr1 = ccmr1ptr.*;
-            // Clear channel 2
-            ccmr1 &= 0xFF;
-            // PWM mode 1
-            ccmr1 |= 0b111 << 12;
-            ccmr1ptr.* = ccmr1;
-            TIM2.PSC = 0;
-            TIM2.ARR = bit_count - 1;
-            // Because of pwm mode 2, we are high when count >= CCR, so LE goes high when = bit count, then it resets
-            TIM2.CCR[1] = bit_count - 1;
-            TIM2.CCER.modify(.{
-                .@"CCE[1]" = 1,
-            });
-            TIM2.CR1.modify(.{
-                .CEN = 1,
-            });
+    // Setup DMA
+    // Configure to respond to SPI requests only
+    // See Table 33.
+    // NOTE: MICROZIG IS BUGGED!! IT HAS A CS[0] FIELayerData, SO EVERYTHING IS OFF BY 1 HERE
+    // SO EVEN THO WE ARE USING CHANNEL 4, WE GOTTA USE FIELayerData CS[3]
+    DMA2.CSELR.modify(.{
+        .@"CS[3]" = 0b0011,
+    });
 
-            // Setup DMA
-            // Configure to respond to SPI requests only
-            // See Table 33.
-            // NOTE: MICROZIG IS BUGGED!! IT HAS A CS[0] FIELayerData, SO EVERYTHING IS OFF BY 1 HERE
-            // SO EVEN THO WE ARE USING CHANNEL 4, WE GOTTA USE FIELayerData CS[3]
-            DMA2.CSELR.modify(.{
-                .@"CS[3]" = 0b0011,
-            });
+    DMA2_CH4.CR.modify(.{
+        // Do not enable yet
+        .EN = 0,
+        .PSIZE = .Bits8,
+        .MSIZE = .Bits8,
+        .PL = .VeryHigh,
+        .MINC = 1,
+        .CIRC = 1,
+        .DIR = .FromMemory,
+        .TCIE = 1,
+    });
 
-            DMA2_CH4.CR.modify(.{
-                // Do not enable yet
-                .EN = 0,
-                .PSIZE = .Bits8,
-                .MSIZE = .Bits8,
-                .PL = .VeryHigh,
-                .MINC = 1,
-                .CIRC = 1,
-                .DIR = .FromMemory,
-                .TCIE = 1,
-            });
+    DMA2_CH4.PAR = @intFromPtr(&SPI1.DR16);
+    DMA2_CH4.NDTR.modify(.{
+        .NDT = 0,
+    });
 
-            DMA2_CH4.PAR = @intFromPtr(&SPI1.DR16);
-            DMA2_CH4.NDTR.modify(.{
-                .NDT = 0,
-            });
+    // Enable interrupt
+    // cmsis.NVIC_EnableIRQ(cmsis.DMA1_Ch4_7_DMA2_Ch3_5_IRQn);
+}
 
-            // Enable interrupt
-            // const ISER: *volatile u32 = @ptrFromInt(0xE000E100);
-            // ISER.* = 1 << 11;
-        }
+/// Begins an async shift opperation.
+/// Data must remain a valid pointer for the durration of the shift, as DMA will read from it
+pub fn startShift(data: *const FrameBuffer) void {
+    comptime std.debug.assert(@sizeOf(FrameBuffer) == (25 * 8));
+    DMA2_CH4.CR.modify(.{
+        .EN = 0,
+    });
+    TIM2.CR1.modify(.{
+        .CEN = 0,
+    });
+    // Wait for SPI to finish
+    while (SPI1.SR.read().BSY == 1) {}
 
-        /// Begins an async shift opperation.
-        /// Data must remain a valid pointer for the durration of the shift, as DMA will read from it
-        pub fn startShift(data: *const [num_srs]u8) void {
-            GPIOB.ODR.modify(.{
-                .@"ODR[4]" = .Low,
-            });
-            DMA2_CH4.CR.modify(.{
-                .EN = 0,
-            });
-            DMA2_CH4.MAR = @intFromPtr(data);
-            DMA2_CH4.NDTR.modify(.{
-                .NDT = num_srs,
-            });
-            DMA2_CH4.CR.modify(.{
-                .EN = 1,
-            });
-        }
+    DMA2_CH4.MAR = @intFromPtr(data);
+    DMA2_CH4.NDTR.modify(.{
+        .NDT = @sizeOf(FrameBuffer),
+    });
+    TIM2.CNT = 0;
+    TIM2.CR1.modify(.{
+        .CEN = 1,
+    });
 
-        pub fn sendSync(data: *const [num_srs]u8) void {
-            // GPIOB.ODR.modify(.{
-            //     .@"ODR[4]" = .Low,
-            // });
-            for (data) |byte| {
-                while (SPI1.SR.read().TXE == 0) {}
-                @as(*volatile u8, @ptrCast(&SPI1.DR16)).* = byte;
-            }
-            // while (SPI1.SR.read().BSY == 1) {}
-            // GPIOB.ODR.modify(.{
-            //     .@"ODR[4]" = .High,
-            // });
-        }
-    };
+    DMA2_CH4.CR.modify(.{
+        .EN = 1,
+    });
 }
 
 fn getDmaCh(dma: *volatile periph_types.bdma_v2.DMA, channel: comptime_int) *periph_types.bdma_v2.CH {
@@ -221,10 +202,49 @@ pub const FrameBuffer = extern struct {
 
     /// Right-handed coordinates where z is up
     pub fn set_pixel(self: *FrameBuffer, x: u3, y: u3, z: u3, color: Led) void {
-        var row: u24 = @bitCast(self.layers[z].srs[3 * (7 - y) ..][0..3].*);
-        row &= ~(@as(u24, 0b111) << (x * 3));
-        row |= (@as(u24, @intCast(@as(u3, @bitCast(color)))) << (x * 3));
-        self.layers[z].srs[3 * (7 - y) ..][0..3].* = @bitCast(row);
+        const layer: *LayerData = &self.layers[z];
+        const newY: u8 = 7 - y;
+        const offset: u8 = 3 * newY;
+        const row: []u8 = layer.srs[offset..];
+        const rawColor: u8 = @intCast(@as(u3, @bitCast(color)));
+        switch (x) {
+            0 => {
+                row[0] &= ~@as(u8, 0x7);
+                row[0] |= rawColor;
+            },
+            1 => {
+                row[0] &= ~@as(u8, 0x38);
+                row[0] |= rawColor << 3;
+            },
+            2 => {
+                row[0] &= ~@as(u8, 0xC0);
+                row[0] |= rawColor << 6;
+                row[1] &= ~@as(u8, 0x1);
+                row[1] |= rawColor >> 2;
+            },
+            3 => {
+                row[1] &= ~@as(u8, 0x0e);
+                row[1] |= rawColor << 1;
+            },
+            4 => {
+                row[1] &= ~@as(u8, 0x70);
+                row[1] |= rawColor << 4;
+            },
+            5 => {
+                row[1] &= ~@as(u8, 0x80);
+                row[1] |= rawColor << 7;
+                row[2] &= ~@as(u8, 0x03);
+                row[2] |= rawColor >> 1;
+            },
+            6 => {
+                row[2] &= ~@as(u8, 0x1c);
+                row[2] |= rawColor << 2;
+            },
+            7 => {
+                row[2] &= ~@as(u8, 0xe0);
+                row[2] |= rawColor << 5;
+            },
+        }
     }
 
     pub fn set_channel(self: *FrameBuffer, x: u3, y: u3, z: u3, channel: Color, val: u1) void {
