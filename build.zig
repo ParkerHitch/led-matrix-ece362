@@ -60,7 +60,7 @@ pub fn build(b: *std.Build) !void {
         if (builtin.target.os.tag == .macos or builtin.target.os.tag == .linux) envMap.get("HOME").? else if (builtin.target.os.tag == .windows) envMap.get("USERPROFILE").? else @compileError("Building on unsupported OS. Like actually what are you doing? Why are you not running windows, mac, or linux?");
 
     const openocdPath = try std.fs.path.resolve(b.allocator, &.{ homePath, ".platformio", "packages", "tool-openocd", "bin" });
-    std.debug.print("Home dir: {s}\nOpenocd dir: {s}\n", .{ homePath, openocdPath });
+    //std.debug.print("Home dir: {s}\nOpenocd dir: {s}\n", .{ homePath, openocdPath });
     defer b.allocator.free(openocdPath);
     const openocd = try b.findProgram(&.{"openocd"}, &.{openocdPath});
 
