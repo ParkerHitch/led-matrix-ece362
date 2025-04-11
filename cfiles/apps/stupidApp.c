@@ -1,2 +1,5 @@
+#include "application.h"
 
-// Blah
+Application stupidReal = {};
+Application* stupidApp = &stupidReal;
+

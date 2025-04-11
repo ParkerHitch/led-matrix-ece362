@@ -56,6 +56,28 @@ pub fn build(b: *std.Build) !void {
     firmware.app_mod.addIncludePath(b.path("include/"));
     // Add cApps option
     options.addOption([]const []const u8, "cApps", try cApps.toOwnedSlice());
+
+    // ----
+    // Find zig apps
+    // ----
+    var zigApps = std.ArrayList([]const u8).init(b.allocator);
+    var zigAppsDir = try std.fs.openDirAbsolute(b.path("src/apps").getPath(b), .{ .iterate = true });
+    var zappsIter = zigAppsDir.iterate();
+    while (try zappsIter.next()) |app| {
+        if (app.kind == .file and std.mem.endsWith(u8, app.name, ".zig")) {
+            if (std.mem.eql(u8, app.name, "index.zig")) {
+                continue;
+            }
+            try zigApps.append(try b.allocator.dupe(u8, app.name[0 .. app.name.len - 4]));
+        }
+    }
+    options.addOption([]const []const u8, "zigApps", try zigApps.toOwnedSlice());
+    // TODO:
+    // Auto-generate index file
+
+    // ------
+    // Make sure options are available to the app
+    // -----
     firmware.app_mod.addOptions("options", options);
 
     // -------

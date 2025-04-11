@@ -1,7 +1,7 @@
 #include "application.h"
 #include <stdint.h>
 
-int32_t initMyApp();
+void initMyApp();
 void deinitMyApp();
 void renderMyApp();
 
@@ -9,6 +9,9 @@ Application myAppReal = {
     .initFn = &initMyApp,
     .renderFn = &renderMyApp,
     .deinitFn = &deinitMyApp,
+
+    .name = "Fun App",
+    .author = "Homeboy",
 
     .targetFPS = 30,
     .needsAccel = false,
@@ -18,15 +21,15 @@ Application myAppReal = {
 Application* myApp = &myAppReal;
 
 
-int32_t initMyApp() {
-    return 0;
+void initMyApp() {
+    return;
 }
 void deinitMyApp() {
     return;
 }
-void renderMyApp(FrameBuffer* buffer) {
-    set_pixel(buffer, 0,0,0, RED);
-    set_pixel(buffer, 1,1,1, BLUE);
+void renderMyApp() {
+    // set_pixel(buffer, 0,0,0, RED);
+    // set_pixel(buffer, 1,1,1, BLUE);
     return;
 }
 
