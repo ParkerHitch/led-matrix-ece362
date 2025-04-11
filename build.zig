@@ -51,7 +51,7 @@ pub fn build(b: *std.Build) !void {
     // Flash step
     // -----------
     //
-    const openocd = try b.findProgram(&.{"openocd"}, &.{"C:\\Users\\jnbta\\.platformio\\packages\\tool-openocd\\bin"});
+    const openocd = try b.findProgram(&.{"openocd"}, &.{"C:\\Users\\richy\\.platformio\\packages\\tool-openocd\\bin"});
 
     // Absolute path to openocd.cfg
     const openocdcfg = b.path("build/openocd.cfg").getPath(b);

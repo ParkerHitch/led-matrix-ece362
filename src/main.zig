@@ -85,3 +85,22 @@ pub fn main() void {
         last_state = SW3.state;
     }
 }
+
+pub fn snek(frame: LedMatrix.Frame, red: u1, green: u1, blue: u1) void {
+    var x: u3 = 0;
+    var y: u3 = 0;
+    var z: u3 = 0;
+
+    while (z < 8) {
+        while (y < 8) {
+            while (x < 8) {
+                frame.set_pixel(x, y, z, .{ .r = red, .g = green, .b = blue });
+                x += 1;
+            }
+            y += 1;
+            x = 0;
+        }
+        z += 1;
+        y = 0;
+    }
+}
