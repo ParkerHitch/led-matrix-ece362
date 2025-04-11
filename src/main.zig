@@ -66,7 +66,7 @@ pub fn main() void {
     // loads scroll bar
     MenuDisp.LCD_DrawFillRectangle(0, 310, 203, 320, MenuDisp.GRAY);
     MenuDisp.LCD_DrawFillRectangle(174, 310, 203, 320, MenuDisp.LIGHTGRAY);
-    while (1) {
+    while (true) {
         MenuDisp.nano_wait(1000);
     }
     // var frame = LedMatrix.Frame{};

@@ -1,34 +1,34 @@
 const microzig = @import("microzig");
 const std = @import("std");
-const nano_wait = @import("subsystems/nano_wait.S");
 const peripherals = microzig.chip.peripherals;
 const periph_types = microzig.chip.types.peripherals;
 const RCC = peripherals.RCC;
 const SPI2 = peripherals.SPI2;
 const GPIOA = peripherals.GPIOA;
 const GPIOB = peripherals.GPIOB;
+pub fn nano_wait = @import("include/nano_wait.S");
 
 // Constants for all the colors we can use :p
-const WHITE = 0xFFFF;
-const BLACK = 0x0000;
-const BLUE = 0x001F;
-const YELLOW = 0xFFE0;
-const GBLUE = 0x07FF;
-const RED = 0xF800;
-const MAGENTA = 0xF81F;
-const GREEN = 0x07E0;
-const CYAN = 0x7FFF;
-const BROWN = 0xBC40;
-const BRRED = 0xFC07;
-const GRAY = 0x8430;
-const DARKBLUE = 0x01CF;
-const LIGHTBLUE = 0x7D7C;
-const GRAYBLUE = 0x5458;
-const LIGHTGREEN = 0x841F;
-const LIGHTGRAY = 0xEF5B;
-const LGRAY = 0xC618;
-const LGRAYBLUE = 0xA651;
-const LBBLUE = 0x2B12;
+pub const WHITE = 0xFFFF;
+pub const BLACK = 0x0000;
+pub const BLUE = 0x001F;
+pub const YELLOW = 0xFFE0;
+pub const GBLUE = 0x07FF;
+pub const RED = 0xF800;
+pub const MAGENTA = 0xF81F;
+pub const GREEN = 0x07E0;
+pub const CYAN = 0x7FFF;
+pub const BROWN = 0xBC40;
+pub const BRRED = 0xFC07;
+pub const GRAY = 0x8430;
+pub const DARKBLUE = 0x01CF;
+pub const LIGHTBLUE = 0x7D7C;
+pub const GRAYBLUE = 0x5458;
+pub const LIGHTGREEN = 0x841F;
+pub const LIGHTGRAY = 0xEF5B;
+pub const LGRAY = 0xC618;
+pub const LGRAYBLUE = 0xA651;
+pub const LBBLUE = 0x2B12;
 
 // Constants for the LCD Display
 const LCD_W = 240;
@@ -42,26 +42,27 @@ pub const lcd_dev_t = extern struct {
     wramcmd: u16,
     setxcmd: u16,
     setycmd: u16,
-    reset: *const fn (a: u1) noreturn,
-    select: *const fn (a: u1) noreturn,
-    reg_select: *const fn (a: u1) noreturn,
+    reset: fn (i8) void,
+    select: fn (i8) void,
+    reg_select: fn (i8) void,
 };
 
 pub var lcddev: lcd_dev_t = .{};
 pub var APP_NUM: u32 = 0; // stores where # of app program is app
 pub var RUNNING_APP: u1 = 0; // 0 = on menu, 1 = running app
 pub var MAXAPPS: u32 = 10; // read the name
-pub var APPLIST: [][]const u8 = .{}; // acts like application struct for now
+pub var APPLIST: [][]const u8 = undefined; // acts like application struct for now
 pub var MENU: []const u8 = "Select App:"; // text for menu
 
-pub fn tft_select(val: c_int) noreturn {
+pub fn tft_select(val: i8) void {
     if (val == 0) {
-        while (SPI2.SR & (SPI2.SR.read().BSY == 1)) {}
+        // while ((SPI2.SR.read()) & (SPI2.SR.read().BSY == 1)) {}
+        while (SPI2.SR.read().BSY == 1) {}
         GPIOB.BSRR.modify(.{
             .@"BS[10]" = 1,
         });
     } else {
-        while ((GPIOB.ODR & (1 << 10)) == 0) {}
+        while ((GPIOB.ODR.read().@"ODR[10]") == 0) {}
         GPIOB.BSRR.modify(.{
             .@"BR[10]" = 1,
         });
@@ -69,8 +70,8 @@ pub fn tft_select(val: c_int) noreturn {
 }
 
 // If val is non-zero, set nRESET low to reset the display.
-pub fn tft_reset(val: c_int) noreturn {
-    if (val) {
+pub fn tft_reset(val: i8) void {
+    if (val != 0) {
         GPIOB.BSRR.modify(.{
             .@"BR[11]" = 1,
         });
@@ -81,7 +82,7 @@ pub fn tft_reset(val: c_int) noreturn {
     }
 }
 
-pub fn tft_reg_select(val: c_int) noreturn {
+pub fn tft_reg_select(val: i8) void {
     if (val == 1) { // select registers
         // clear
         GPIOB.BSRR.modify(.{
@@ -96,7 +97,7 @@ pub fn tft_reg_select(val: c_int) noreturn {
 }
 
 // resets lcd
-pub fn LCD_Reset() noreturn {
+pub fn LCD_Reset() void {
     lcddev.reset(1); // Assert reset
     nano_wait(100000000); // Wait
     lcddev.reset(0); // De-assert reset
@@ -104,7 +105,7 @@ pub fn LCD_Reset() noreturn {
 }
 
 // selects register of lcd display to change
-pub fn LCD_WR_REG(data: u8) noreturn {
+pub fn LCD_WR_REG(data: u8) void {
     while ((SPI2.SR & (SPI2.SR.read().BSY == 1)) != 0) {}
     // Don't clear RS until the previous operation is done.
     lcddev.reg_select(1);
@@ -112,7 +113,7 @@ pub fn LCD_WR_REG(data: u8) noreturn {
 }
 
 // Write 8-bit data to the LCD
-pub fn LCD_WR_DATA(data: u8) noreturn {
+pub fn LCD_WR_DATA(data: u8) void {
     while ((SPI2.SR & (SPI2.SR.read().BSY == 1)) != 0) {}
     // Don't set RS until the previous operation is done.
     lcddev.reg_select(0);
@@ -120,13 +121,13 @@ pub fn LCD_WR_DATA(data: u8) noreturn {
 }
 
 // dunno the point of this
-pub fn lcd_WriteReg(lcd_reg: u8, lcd_RegValue: u16) noreturn {
+pub fn lcd_WriteReg(lcd_reg: u8, lcd_RegValue: u16) void {
     LCD_WR_REG(lcd_reg);
     LCD_WR_DATA(lcd_RegValue);
 }
 
 // i didn't know this existed before doing all the font manuevering/rotating imma kms
-pub fn LCD_direction(direction: u8) noreturn {
+pub fn LCD_direction(direction: u8) void {
     lcddev.setxcmd = 0x2A;
     lcddev.setycmd = 0x2B;
     lcddev.wramcmd = 0x2C;
@@ -156,7 +157,7 @@ pub fn LCD_direction(direction: u8) noreturn {
 }
 
 // real shit
-pub fn LCD_Init(reset: *const fn (a: u1) noreturn, select: *const fn (a: u1) noreturn, reg_select: *const fn (a: u1) noreturn) noreturn {
+pub fn LCD_Init(reset: fn (i8) void, select: fn (i8) void, reg_select: fn (i8) void) void {
     lcddev.reset = tft_reset;
     lcddev.select = tft_select;
     lcddev.reg_select = tft_reg_select;
@@ -268,7 +269,7 @@ pub fn LCD_Init(reset: *const fn (a: u1) noreturn, select: *const fn (a: u1) nor
 }
 
 // more lci setup for lcd
-pub fn init_spi2_slow() noreturn {
+pub fn init_spi2_slow() void {
     RCC.AHBENR.modify(.{
         .GPIOBEN = 1,
     });
@@ -287,14 +288,14 @@ pub fn init_spi2_slow() noreturn {
         .SPE = 0,
     });
     SPI2.CR1.modify(.{ .BR = .Div256, .MSTR = .Master, .SSM = 1, .SSI = 1 });
-    SPI2.CR2.modify(.{ .DS = .Bits8, .FRXTH = .Quarter, .SSM = 1, .SSI = 1 });
+    SPI2.CR2.modify(.{ .DS = .Bits8, .FRXTH = .Quarter });
     SPI2.CR1.modify(.{
         .SPE = 1,
     });
 }
 
 // more spi setup for lcd
-pub fn sdcard_io_high_speed() noreturn {
+pub fn sdcard_io_high_speed() void {
     SPI2.CR1.modify(.{
         .SPE = 0,
     });
@@ -307,7 +308,7 @@ pub fn sdcard_io_high_speed() noreturn {
 }
 
 // sets up spi for lcd
-pub fn init_lcd_spi() noreturn {
+pub fn init_lcd_spi() void {
     RCC.AHBENR.modify(.{
         .GPIOBEN = 1,
     });
@@ -321,7 +322,7 @@ pub fn init_lcd_spi() noreturn {
 }
 
 // sets up LCD
-pub fn LCD_Setup() noreturn {
+pub fn LCD_Setup() void {
     init_lcd_spi();
     tft_select(0);
     tft_reset(0);
@@ -330,29 +331,29 @@ pub fn LCD_Setup() noreturn {
 }
 
 // idk ngl
-pub fn LCD_WriteRAM_Prepare() noreturn {
+pub fn LCD_WriteRAM_Prepare() void {
     LCD_WR_REG(lcddev.wramcmd);
 }
 
 // idk ngl
-pub fn LCD_WriteData16_Prepare() noreturn {
+pub fn LCD_WriteData16_Prepare() void {
     lcddev.reg_select(0);
     SPI2.CR2.modify(.{ .DS = .Bits16 });
 }
 
 // Write 16-bit data
-pub fn LCD_WriteData16(data: u16) noreturn {
+pub fn LCD_WriteData16(data: u16) void {
     while ((SPI2.SR & (SPI2.SR.read().TXE == 1)) == 0) {}
     SPI2.DR = data;
 }
 
 // Finish writing 16-bit data
-pub fn LCD_WriteData16_End() noreturn {
+pub fn LCD_WriteData16_End() void {
     SPI2.CR2.modify(.{ .DS = .Bits8 });
 }
 
 // Sets "window" of frames desired to change
-pub fn LCD_SetWindow(xStart: u16, yStart: u16, xEnd: u16, yEnd: u16) noreturn {
+pub fn LCD_SetWindow(xStart: u16, yStart: u16, xEnd: u16, yEnd: u16) void {
     LCD_WR_REG(lcddev.setxcmd);
     LCD_WR_DATA(xStart >> 8);
     LCD_WR_DATA(0x00FF & xStart);
@@ -369,7 +370,7 @@ pub fn LCD_SetWindow(xStart: u16, yStart: u16, xEnd: u16, yEnd: u16) noreturn {
 }
 
 // sets the entire screen to a single color
-pub fn LCD_Clear(color: u16) noreturn {
+pub fn LCD_Clear(color: u16) void {
     lcddev.select(1);
     var i: c_uint = 0;
     var m: c_uint = 0;
@@ -388,7 +389,7 @@ pub fn LCD_Clear(color: u16) noreturn {
     lcddev.select(0);
 }
 
-pub fn _LCD_DrawChar(x: u16, y: u16, fc: u16, bc: u16, num: u8, size: u8) noreturn {
+pub fn _LCD_DrawChar(x: u16, y: u16, fc: u16, bc: u16, num: u8, size: u8) void {
     var temp: i32 = 0;
     var pos: i32 = 0;
     var t: i32 = 0;
@@ -414,14 +415,14 @@ pub fn _LCD_DrawChar(x: u16, y: u16, fc: u16, bc: u16, num: u8, size: u8) noretu
 }
 
 // sets up drawing char
-pub fn LCD_DrawChar(x: u16, y: u16, fc: u16, bc: u16, num: u8, size: u8) noreturn {
+pub fn LCD_DrawChar(x: u16, y: u16, fc: u16, bc: u16, num: u8, size: u8) void {
     lcddev.select(1);
     _LCD_DrawChar(x, y, fc, bc, num, size);
     lcddev.select(0);
 }
 
 // draws a string by iterating through DrawChar
-pub fn LCD_DrawString(x: u16, y: u16, fc: u16, bg: u16, p: []const u8, size: u8) noreturn {
+pub fn LCD_DrawString(x: u16, y: u16, fc: u16, bg: u16, p: []const u8, size: u8) void {
     lcddev.select(1);
     var i: u8 = 0;
     const upperbound: i8 = 16;
@@ -436,7 +437,7 @@ pub fn LCD_DrawString(x: u16, y: u16, fc: u16, bg: u16, p: []const u8, size: u8)
 }
 
 // draws a filled rectangle
-pub fn _LCD_Fill(sx: u16, sy: u16, ex: u16, ey: u16, color: u16) noreturn {
+pub fn _LCD_Fill(sx: u16, sy: u16, ex: u16, ey: u16, color: u16) void {
     var i: u16 = 0;
     var j: u16 = 0;
     const width: u16 = ex - sx + 1;
@@ -456,14 +457,14 @@ pub fn _LCD_Fill(sx: u16, sy: u16, ex: u16, ey: u16, color: u16) noreturn {
 }
 
 // sets up drawing a filled rectangle
-pub fn LCD_DrawFillRectangle(x1: u16, y1: u16, x2: u16, y2: u16, c: u16) noreturn {
+pub fn LCD_DrawFillRectangle(x1: u16, y1: u16, x2: u16, y2: u16, c: u16) void {
     lcddev.select(1);
     _LCD_Fill(x1, y1, x2, y2, c);
     lcddev.select(0);
 }
 
 // Shift screen up or down depending on the direction
-pub fn shift_screen(dir: u1) noreturn {
+pub fn shift_screen(dir: u1) void {
     // 0 = down, 1 = up
     // LCD_Clear(0xffff);
     // LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE);
@@ -496,7 +497,7 @@ pub fn shift_screen(dir: u1) noreturn {
 }
 
 // updates arrow and scroll bar
-pub fn update_display() noreturn {
+pub fn update_display() void {
     const change_amnt: u32 = APP_NUM % MAXAPPS; // for % of scroll bar calculations
     LCD_DrawFillRectangle(0, 0, 201, 21, WHITE);
     LCD_DrawChar(173 - (28 * (APP_NUM % 7)), 5, BLACK, WHITE, 62, 26); // each "line" for text is 28 pixels apart with max of 7 apps per line
@@ -505,7 +506,7 @@ pub fn update_display() noreturn {
 }
 
 // Jumps to app description page
-pub fn jump_to_app(appname: []const u8, authorfirst: []const u8, authorlast: []const u8) noreturn {
+pub fn jump_to_app(appname: []const u8, authorfirst: []const u8, authorlast: []const u8) void {
     RUNNING_APP = 1;
     const by: []const u8 = "By:";
     const back: []const u8 = "Back";
@@ -520,7 +521,7 @@ pub fn jump_to_app(appname: []const u8, authorfirst: []const u8, authorlast: []c
 }
 
 // Reloads the "Select App:" menu
-pub fn reload_menu() noreturn {
+pub fn reload_menu() void {
     RUNNING_APP = 0;
     var i: u32 = 0;
     const find_start: i32 = APP_NUM - (APP_NUM % 7);
