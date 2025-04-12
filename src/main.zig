@@ -29,18 +29,18 @@ pub fn main() void {
 
     //init_exti();
     MenuDisp.LCD_Setup();
-    // nano_wait(10000000);
+    // cImport.nano_wait(10000000);
     // ACT LIKE THIS IS US LOADING IN THE APPLICATIONS TO THE APPLICATION STRUCT
-    MenuDisp.APPLIST[0] = "Never";
-    MenuDisp.APPLIST[1] = "gonna";
-    MenuDisp.APPLIST[2] = "give";
-    MenuDisp.APPLIST[3] = "you";
-    MenuDisp.APPLIST[4] = "up";
-    MenuDisp.APPLIST[5] = "never";
-    MenuDisp.APPLIST[6] = "gonna";
-    MenuDisp.APPLIST[7] = "let";
-    MenuDisp.APPLIST[8] = "you";
-    MenuDisp.APPLIST[9] = "down.";
+    // MenuDisp.APPLIST[0] = "Never";
+    // MenuDisp.APPLIST[1] = "gonna";
+    // MenuDisp.APPLIST[2] = "give";
+    // MenuDisp.APPLIST[3] = "you";
+    // MenuDisp.APPLIST[4] = "up";
+    // MenuDisp.APPLIST[5] = "never";
+    // MenuDisp.APPLIST[6] = "gonna";
+    // MenuDisp.APPLIST[7] = "let";
+    // MenuDisp.APPLIST[8] = "you";
+    // MenuDisp.APPLIST[9] = "down.";
     // SETS UP STARTING SCREEN
     MenuDisp.LCD_Clear(MenuDisp.WHITE);
     MenuDisp.LCD_DrawFillRectangle(204, 0, 240, 320, MenuDisp.LIGHTBLUE); // menu background

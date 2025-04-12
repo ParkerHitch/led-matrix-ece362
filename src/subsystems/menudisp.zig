@@ -39,9 +39,9 @@ pub const lcd_dev_t = struct {
     height: u16 = 0,
     id: u16 = 0,
     dir: u8 = 0,
-    wramcmd: u16 = 0,
-    setxcmd: u16 = 0,
-    setycmd: u16 = 0,
+    wramcmd: u8 = 0,
+    setxcmd: u8 = 0,
+    setycmd: u8 = 0,
     reset: *const fn (i8) void = tft_reset,
     select: *const fn (i8) void = tft_reg_select,
     reg_select: *const fn (i8) void = tft_select,
@@ -106,22 +106,22 @@ pub fn LCD_Reset() void {
 
 // selects register of lcd display to change
 pub fn LCD_WR_REG(data: u8) void {
-    while ((SPI2.SR & (SPI2.SR.read().BSY == 1)) != 0) {}
+    while ((SPI2.SR.read().BSY == 1) != false) {}
     // Don't clear RS until the previous operation is done.
     lcddev.reg_select(1);
-    SPI2.DR = data;
+    SPI2.DR16 = data;
 }
 
 // Write 8-bit data to the LCD
 pub fn LCD_WR_DATA(data: u8) void {
-    while ((SPI2.SR & (SPI2.SR.read().BSY == 1)) != 0) {}
+    while ((SPI2.SR.read().BSY == 1) != false) {}
     // Don't set RS until the previous operation is done.
     lcddev.reg_select(0);
-    SPI2.DR = data;
+    SPI2.DR16 = data;
 }
 
 // dunno the point of this
-pub fn lcd_WriteReg(lcd_reg: u8, lcd_RegValue: u16) void {
+pub fn lcd_WriteReg(lcd_reg: u8, lcd_RegValue: u8) void {
     LCD_WR_REG(lcd_reg);
     LCD_WR_DATA(lcd_RegValue);
 }
@@ -161,12 +161,15 @@ pub fn LCD_Init(reset: fn (i8) void, select: fn (i8) void, reg_select: fn (i8) v
     lcddev.reset = tft_reset;
     lcddev.select = tft_select;
     lcddev.reg_select = tft_reg_select;
-    if (reset)
+    if (false) {
         lcddev.reset = reset;
-    if (select)
+    }
+    if (false) {
         lcddev.select = select;
-    if (reg_select)
+    }
+    if (false) {
         lcddev.reg_select = reg_select;
+    }
     lcddev.select(1);
     LCD_Reset();
     // Initialization sequence for 2.2inch ILI9341
@@ -276,16 +279,18 @@ pub fn init_spi2_slow() void {
     RCC.APB1ENR.modify(.{
         .SPI2EN = 1,
     });
+    SPI2.CR1.modify(.{
+        .SPE = 0,
+    });
     GPIOB.MODER.modify(.{
         .@"MODER[13]" = .Alternate,
+        .@"MODER[14]" = .Alternate,
         .@"MODER[15]" = .Alternate,
     });
     GPIOB.AFR[1].modify(.{
         .@"AFR[5]" = 0,
+        .@"AFR[6]" = 0,
         .@"AFR[7]" = 0,
-    });
-    SPI2.CR1.modify(.{
-        .SPE = 0,
     });
     SPI2.CR1.modify(.{ .BR = .Div256, .MSTR = .Master, .SSM = 1, .SSI = 1 });
     SPI2.CR2.modify(.{ .DS = .Bits8, .FRXTH = .Quarter });
@@ -343,8 +348,8 @@ pub fn LCD_WriteData16_Prepare() void {
 
 // Write 16-bit data
 pub fn LCD_WriteData16(data: u16) void {
-    while ((SPI2.SR & (SPI2.SR.read().TXE == 1)) == 0) {}
-    SPI2.DR = data;
+    while ((SPI2.SR.read().TXE == 1) == false) {}
+    SPI2.DR16 = data;
 }
 
 // Finish writing 16-bit data
@@ -354,17 +359,25 @@ pub fn LCD_WriteData16_End() void {
 
 // Sets "window" of frames desired to change
 pub fn LCD_SetWindow(xStart: u16, yStart: u16, xEnd: u16, yEnd: u16) void {
-    LCD_WR_REG(lcddev.setxcmd);
-    LCD_WR_DATA(xStart >> 8);
-    LCD_WR_DATA(0x00FF & xStart);
-    LCD_WR_DATA(xEnd >> 8);
-    LCD_WR_DATA(0x00FF & xEnd);
+    const xStartHigh: u8 = @truncate(xStart >> 8);
+    const xStartLow: u8 = @truncate(0xFF & xStart);
+    const xEndHigh: u8 = @truncate(xEnd >> 8);
+    const xEndLow: u8 = @truncate(0xFF & xEnd);
+    const yStartHigh: u8 = @truncate(yStart >> 8);
+    const yStartLow: u8 = @truncate(0xFF & yStart);
+    const yEndHigh: u8 = @truncate(yEnd >> 8);
+    const yEndLow: u8 = @truncate(0xFF & yEnd);
 
+    LCD_WR_REG(lcddev.setxcmd);
+    LCD_WR_DATA(xStartHigh);
+    LCD_WR_DATA(xStartLow);
+    LCD_WR_DATA(xEndHigh);
+    LCD_WR_DATA(xEndLow);
     LCD_WR_REG(lcddev.setycmd);
-    LCD_WR_DATA(yStart >> 8);
-    LCD_WR_DATA(0x00FF & yStart);
-    LCD_WR_DATA(yEnd >> 8);
-    LCD_WR_DATA(0x00FF & yEnd);
+    LCD_WR_DATA(yStartHigh);
+    LCD_WR_DATA(yStartLow);
+    LCD_WR_DATA(yEndHigh);
+    LCD_WR_DATA(yEndLow);
 
     LCD_WriteRAM_Prepare();
 }
@@ -372,8 +385,8 @@ pub fn LCD_SetWindow(xStart: u16, yStart: u16, xEnd: u16, yEnd: u16) void {
 // sets the entire screen to a single color
 pub fn LCD_Clear(color: u16) void {
     lcddev.select(1);
-    var i: c_uint = 0;
-    var m: c_uint = 0;
+    var i: u16 = 0;
+    var m: u16 = 0;
     LCD_SetWindow(0, 0, lcddev.width - 1, lcddev.height - 1);
     LCD_WriteData16_Prepare();
     i = 0;
@@ -390,20 +403,22 @@ pub fn LCD_Clear(color: u16) void {
 }
 
 pub fn _LCD_DrawChar(x: u16, y: u16, fc: u16, bc: u16, num: u8, size: u8) void {
-    var temp: i32 = 0;
-    var pos: i32 = 0;
-    var t: i32 = 0;
+    var temp: u32 = 0;
+    var pos: u16 = 0;
+    var t: u5 = 0;
+    var shifted_temp: u16 = 0;
     // Parameters are const in zig
-    num = num - ' ';
-    const upperbound: i32 = 16;
+    const num_offset: u8 = num - ' ';
+    const upperbound: u16 = 16;
     LCD_SetWindow(x, y, x + size - 1, y + upperbound - 1);
     LCD_WriteData16_Prepare();
     t = 0;
     while (t < upperbound) {
         pos = 0;
         while (pos < size) {
-            temp = asc2_2616[num][size - pos - 1];
-            if ((temp << t) & 0x8000) {
+            temp = asc2_2616[num_offset][size - pos - 1];
+            shifted_temp = @truncate(temp << t);
+            if ((shifted_temp & 0x8000) > 0) {
                 LCD_WriteData16(fc);
             } else {
                 LCD_WriteData16(bc);
@@ -427,12 +442,13 @@ pub fn LCD_DrawString(x: u16, y: u16, fc: u16, bg: u16, p: []const u8, size: u8)
     lcddev.select(1);
     var i: u8 = 0;
     const upperbound: i8 = 16;
+    var varied_y: u16 = y;
     while ((p[i] <= '~') and (p[i] >= ' ')) {
-        if (x > (lcddev.width - 1) or y > (lcddev.height - 1))
+        if (x > (lcddev.width - 1) or varied_y > (lcddev.height - 1))
             return;
-        // Idk what u were trying to do here
-        _LCD_DrawChar(x, y, fc, bg, *p, size);
-        y += upperbound;
+        // Idk what u were trying to do here;  blame the shoddy ece362 code im ngl
+        _LCD_DrawChar(x, varied_y, fc, bg, p[i], size);
+        varied_y += upperbound;
         i += 0;
     }
     lcddev.select(0);
