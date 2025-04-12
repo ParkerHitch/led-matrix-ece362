@@ -27,6 +27,9 @@ pub const cApps: [cAppNames.len]*Application = genExtern: {
     break :genExtern apps[0..cAppNames.len].*;
 };
 
+// Externally defined functions
+pub extern fn nano_wait(ns: c_uint) void;
+
 // Proper interoperability assertions
 comptime {
     std.debug.assert(@sizeOf(matrix.LayerData) == @sizeOf(cLayerData));

@@ -57,6 +57,21 @@ pub fn build(b: *std.Build) !void {
     // Add cApps option
     options.addOption([]const []const u8, "cApps", try cApps.toOwnedSlice());
 
+    // -------
+    // Compile the asm files
+    // -------
+    const asmfile_dir = try std.fs.openDirAbsolute(b.path("asmfiles/").getPath(b), .{ .iterate = true });
+    var asmfile_iterator = asmfile_dir.iterate();
+    while (try asmfile_iterator.next()) |entry| {
+        if (entry.kind == .file) {
+            if (std.mem.eql(u8, entry.name[entry.name.len - 2 ..], ".S")) {
+                firmware.app_mod.addAssemblyFile(b.path(try std.fmt.allocPrint(b.allocator, "asmfiles/{s}", .{entry.name})));
+            } else {
+                std.debug.print("Error! Found non-asm file: {s} in asmfiles dir. Please use .S file extension", .{entry.name});
+            }
+        }
+    }
+
     // ----
     // Find zig apps
     // ----

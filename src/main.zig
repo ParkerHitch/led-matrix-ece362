@@ -5,8 +5,8 @@ const cImport = @import("cImport.zig");
 const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
-const LedMatrix = @import("subsystems/matrix.zig");
 const MenuDisp = @import("subsystems/menudisp.zig");
+const zigApps = @import("apps/index.zig").zigApps;
 
 const TestSR = LedMatrix.SrChain(8, .Div4);
 
@@ -62,7 +62,7 @@ pub fn main() void {
     MenuDisp.LCD_DrawFillRectangle(0, 310, 203, 320, MenuDisp.GRAY);
     MenuDisp.LCD_DrawFillRectangle(174, 310, 203, 320, MenuDisp.LIGHTGRAY);
     while (true) {
-        MenuDisp.nano_wait(1000);
+        cImport.nano_wait(1000);
     }
     // var frame = LedMatrix.Frame{};
 

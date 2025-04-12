@@ -1,12 +1,12 @@
 const microzig = @import("microzig");
 const std = @import("std");
+const cImport = @import("../cImport.zig");
 const peripherals = microzig.chip.peripherals;
 const periph_types = microzig.chip.types.peripherals;
 const RCC = peripherals.RCC;
 const SPI2 = peripherals.SPI2;
 const GPIOA = peripherals.GPIOA;
 const GPIOB = peripherals.GPIOB;
-pub fn nano_wait = @import("include/nano_wait.S");
 
 // Constants for all the colors we can use :p
 pub const WHITE = 0xFFFF;
@@ -34,17 +34,17 @@ pub const LBBLUE = 0x2B12;
 const LCD_W = 240;
 const LCD_H = 320;
 
-pub const lcd_dev_t = extern struct {
-    width: u16,
-    height: u16,
-    id: u16,
-    dir: u8,
-    wramcmd: u16,
-    setxcmd: u16,
-    setycmd: u16,
-    reset: fn (i8) void,
-    select: fn (i8) void,
-    reg_select: fn (i8) void,
+pub const lcd_dev_t = struct {
+    width: u16 = 0,
+    height: u16 = 0,
+    id: u16 = 0,
+    dir: u8 = 0,
+    wramcmd: u16 = 0,
+    setxcmd: u16 = 0,
+    setycmd: u16 = 0,
+    reset: *const fn (i8) void = tft_reset,
+    select: *const fn (i8) void = tft_reg_select,
+    reg_select: *const fn (i8) void = tft_select,
 };
 
 pub var lcddev: lcd_dev_t = .{};
@@ -62,7 +62,7 @@ pub fn tft_select(val: i8) void {
             .@"BS[10]" = 1,
         });
     } else {
-        while ((GPIOB.ODR.read().@"ODR[10]") == 0) {}
+        while ((GPIOB.ODR.read().@"ODR[10]") == .Low) {}
         GPIOB.BSRR.modify(.{
             .@"BR[10]" = 1,
         });
@@ -99,9 +99,9 @@ pub fn tft_reg_select(val: i8) void {
 // resets lcd
 pub fn LCD_Reset() void {
     lcddev.reset(1); // Assert reset
-    nano_wait(100000000); // Wait
+    cImport.nano_wait(100000000); // Wait
     lcddev.reset(0); // De-assert reset
-    nano_wait(50000000); // Wait
+    cImport.nano_wait(50000000); // Wait
 }
 
 // selects register of lcd display to change
@@ -261,7 +261,7 @@ pub fn LCD_Init(reset: fn (i8) void, select: fn (i8) void, reg_select: fn (i8) v
     LCD_WR_DATA(0x00);
     LCD_WR_DATA(0xef);
     LCD_WR_REG(0x11); // Exit Sleep
-    nano_wait(120000000); // Wait 120 ms
+    cImport.nano_wait(120000000); // Wait 120 ms
     LCD_WR_REG(0x29); // Display on
 
     LCD_direction(0);
@@ -393,6 +393,7 @@ pub fn _LCD_DrawChar(x: u16, y: u16, fc: u16, bc: u16, num: u8, size: u8) void {
     var temp: i32 = 0;
     var pos: i32 = 0;
     var t: i32 = 0;
+    // Parameters are const in zig
     num = num - ' ';
     const upperbound: i32 = 16;
     LCD_SetWindow(x, y, x + size - 1, y + upperbound - 1);
@@ -429,6 +430,7 @@ pub fn LCD_DrawString(x: u16, y: u16, fc: u16, bg: u16, p: []const u8, size: u8)
     while ((p[i] <= '~') and (p[i] >= ' ')) {
         if (x > (lcddev.width - 1) or y > (lcddev.height - 1))
             return;
+        // Idk what u were trying to do here
         _LCD_DrawChar(x, y, fc, bg, *p, size);
         y += upperbound;
         i += 0;
