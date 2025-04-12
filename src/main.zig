@@ -1,5 +1,8 @@
 const std = @import("std");
 const microzig = @import("microzig");
+const LedMatrix = @import("subsystems/matrix.zig");
+const cImport = @import("cImport.zig");
+const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 const LedMatrix = @import("subsystems/matrix.zig");
@@ -8,6 +11,10 @@ const MenuDisp = @import("subsystems/menudisp.zig");
 const TestSR = LedMatrix.SrChain(8, .Div4);
 
 const ChipInit = @import("init/general.zig");
+// Make sure everything gets exported
+comptime {
+    _ = @import("cExport.zig");
+}
 
 pub const microzig_options = .{
     .interrupts = .{
@@ -15,19 +22,7 @@ pub const microzig_options = .{
     },
 };
 
-const DebouncedBtn = struct {
-    history: u8 = 0,
-    state: u1 = 0,
-
-    pub fn update(self: *@This(), val: u1) void {
-        self.history = (self.history << 1) | val;
-        if (self.history == 0xFF) {
-            self.state = 1;
-        } else if (self.history == 0x00) {
-            self.state = 0;
-        }
-    }
-};
+pub const apps = zigApps ++ cImport.cApps;
 
 pub fn main() void {
     ChipInit.internal_clock();
