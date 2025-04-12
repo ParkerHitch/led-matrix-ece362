@@ -10,13 +10,15 @@ const MicroBuild = microzig.MicroBuild(.{
 pub fn build(b: *std.Build) !void {
     const mz_dep = b.dependency("microzig", .{});
     const mb = MicroBuild.init(b, mz_dep) orelse return;
-    const stmTarget: *const microzig.Target = mb.ports.stm32.chips.STM32F091RC;
+    const mzTarget: *const microzig.Target = mb.ports.stm32.chips.STM32F091RC;
+    var options = b.addOptions();
+    // const zigTarget = b.resolveTargetQuery(mzTarget.chip.cpu);
 
     const optimize = b.standardOptimizeOption(.{});
 
     const firmware = mb.add_firmware(.{
         .name = "hello",
-        .target = stmTarget,
+        .target = mzTarget,
         .optimize = optimize,
         .root_source_file = b.path("src/main.zig"),
     });
@@ -24,16 +26,24 @@ pub fn build(b: *std.Build) !void {
     // -------
     // Compile the C files
     // -------
+    var cApps = std.ArrayList([]const u8).init(b.allocator);
+
     const c_compile_flags = [_][]const u8{ "-DSTM32F0", "-DSTM32F091xC" };
 
     const cfile_dir = try std.fs.openDirAbsolute(b.path("cfiles/").getPath(b), .{ .iterate = true });
     var cfile_walker = try cfile_dir.walk(b.allocator);
+    defer cfile_walker.deinit();
     while (try cfile_walker.next()) |entry| {
         if (entry.kind == .file) {
             if (std.mem.eql(u8, entry.basename[entry.basename.len - 2 ..], ".c")) {
                 const dir_path = try entry.dir.realpathAlloc(b.allocator, ".");
                 const abspath = try std.fs.path.resolve(b.allocator, &.{ dir_path, entry.basename });
                 firmware.add_c_source_file(CSource{ .file = .{ .cwd_relative = abspath }, .flags = &c_compile_flags });
+
+                // if it's in the apps dir
+                if (std.mem.endsWith(u8, dir_path, "apps")) {
+                    try cApps.append(try b.allocator.dupe(u8, entry.basename[0 .. entry.basename.len - 2]));
+                }
             }
         }
     }
@@ -43,6 +53,32 @@ pub fn build(b: *std.Build) !void {
     firmware.app_mod.addIncludePath(b.path("CMSIS_5/CMSIS/Core/Include/"));
     firmware.app_mod.addIncludePath(b.path("cmsis-device-f0/Include/"));
     firmware.add_include_path(b.path("include/"));
+    firmware.app_mod.addIncludePath(b.path("include/"));
+    // Add cApps option
+    options.addOption([]const []const u8, "cApps", try cApps.toOwnedSlice());
+
+    // ----
+    // Find zig apps
+    // ----
+    var zigApps = std.ArrayList([]const u8).init(b.allocator);
+    var zigAppsDir = try std.fs.openDirAbsolute(b.path("src/apps").getPath(b), .{ .iterate = true });
+    var zappsIter = zigAppsDir.iterate();
+    while (try zappsIter.next()) |app| {
+        if (app.kind == .file and std.mem.endsWith(u8, app.name, ".zig")) {
+            if (std.mem.eql(u8, app.name, "index.zig")) {
+                continue;
+            }
+            try zigApps.append(try b.allocator.dupe(u8, app.name[0 .. app.name.len - 4]));
+        }
+    }
+    options.addOption([]const []const u8, "zigApps", try zigApps.toOwnedSlice());
+    // TODO:
+    // Auto-generate index file
+
+    // ------
+    // Make sure options are available to the app
+    // -----
+    firmware.app_mod.addOptions("options", options);
 
     // -------
     // Firmware install step

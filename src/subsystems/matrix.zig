@@ -6,10 +6,8 @@
 ///     pin A0 & A1 for SCLK input & LE respectively
 const microzig = @import("microzig");
 const std = @import("std");
-const cmsis = @cImport({
-    @cDefine("__PROGRAM_START", {});
-    @cInclude("stm32f091xc.h");
-});
+const cImport = @import("../cImport.zig");
+const cmsis = cImport.cmsis;
 const peripherals = microzig.chip.peripherals;
 const periph_types = microzig.chip.types.peripherals;
 const RCC = peripherals.RCC;
@@ -151,8 +149,8 @@ pub fn init(sysclock_divisor: periph_types.spi_v2.BR) void {
 
 /// Begins an async shift opperation.
 /// Data must remain a valid pointer for the durration of the shift, as DMA will read from it
-pub fn startShift(data: *const Frame) void {
-    comptime std.debug.assert(@sizeOf(Frame) == (25 * 8));
+pub fn startShift(data: *const FrameBuffer) void {
+    comptime std.debug.assert(@sizeOf(FrameBuffer) == (25 * 8));
     DMA2_CH4.CR.modify(.{
         .EN = 0,
     });
@@ -164,7 +162,7 @@ pub fn startShift(data: *const Frame) void {
 
     DMA2_CH4.MAR = @intFromPtr(data);
     DMA2_CH4.NDTR.modify(.{
-        .NDT = @sizeOf(Frame),
+        .NDT = @sizeOf(FrameBuffer),
     });
     TIM2.CNT = 0;
     TIM2.CR1.modify(.{
@@ -193,7 +191,7 @@ pub const LayerData = extern struct {
     srs: [24]u8 = .{0} ** 24,
 };
 
-pub const Frame = extern struct {
+pub const FrameBuffer = extern struct {
     layers: [8]LayerData = defaultLayers: {
         var layers: [8]LayerData = .{LayerData{ .layerId = 0 }} ** 8;
         for (0..8) |i| {
@@ -203,7 +201,7 @@ pub const Frame = extern struct {
     },
 
     /// Right-handed coordinates where z is up
-    pub fn set_pixel(self: *Frame, x: u3, y: u3, z: u3, color: Led) void {
+    pub fn set_pixel(self: *FrameBuffer, x: u3, y: u3, z: u3, color: Led) void {
         const layer: *LayerData = &self.layers[z];
         const newY: u8 = 7 - y;
         const offset: u8 = 3 * newY;
@@ -249,12 +247,16 @@ pub const Frame = extern struct {
         }
     }
 
-    pub fn set_channel(self: *Frame, x: u3, y: u3, z: u3, channel: Color, val: u1) void {
+    pub fn set_channel(self: *FrameBuffer, x: u3, y: u3, z: u3, channel: Color, val: u1) void {
         const bitoffset: u8 = (x * 3 + @intFromEnum(channel));
         const srptr: *u8 = &self.layers[z].srs[bitoffset / 8 + (3 * (7 - y))];
 
         srptr.* &= ~(@as(u8, 1) << @intCast(bitoffset % 8));
         srptr.* |= (@as(u8, val) << @intCast(bitoffset % 8));
+    }
+
+    pub fn cPtr(self: *FrameBuffer) *cImport.cFrameBuffer {
+        return @ptrCast(self);
     }
 };
 
@@ -267,13 +269,14 @@ comptime {
     std.debug.assert(@offsetOf(LayerData, "layerId") == 0);
     std.debug.assert(@offsetOf(LayerData, "srs") == 1);
     // Assert that our frames have the correct memory map
-    std.debug.assert(@sizeOf(Frame) == 25 * 8);
+    std.debug.assert(@sizeOf(FrameBuffer) == 25 * 8);
 }
 
 comptime {
-    var frame: Frame = .{};
+    var frame: FrameBuffer = .{};
     frame.set_pixel(2, 7, 0, .{ .r = 1, .g = 1, .b = 1 });
     // @compileLog(frame.layers[0].srs);
+    std.debug.assert(frame.layers[0].layerId == 0);
     std.debug.assert(frame.layers[0].srs[0] == 0xC0);
     std.debug.assert(frame.layers[0].srs[1] == 0x01);
 }
