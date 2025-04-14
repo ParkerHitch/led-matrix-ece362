@@ -5,7 +5,7 @@ void initMyApp();
 void deinitMyApp();
 void renderMyApp();
 
-Application myAppReal = {
+Application myApp = {
     .initFn = &initMyApp,
     .renderFn = &renderMyApp,
     .deinitFn = &deinitMyApp,
@@ -19,7 +19,7 @@ Application myAppReal = {
     .needsJoystick = false
 };
 
-Application* myApp = &myAppReal;
+// Application* myApp = &myAppReal;
 
 
 void initMyApp() {

@@ -1,5 +1,6 @@
 #include "application.h"
 
-Application stupidReal = {};
-Application* stupidApp = &stupidReal;
+Application stupidApp = {
+    .name = "Stupid App",
+};
 

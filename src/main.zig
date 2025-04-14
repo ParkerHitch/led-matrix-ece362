@@ -40,7 +40,7 @@ pub fn main() void {
     var i: u8 = 0;
     i = 0;
     while (i < 7) {
-        cImport.cMenuDisp.LCD_DrawString(173 - (28 * (i % 7)), 21, cImport.cMenuDisp.BLACK, cImport.cMenuDisp.WHITE, "P-Cock", 26);
+        cImport.cMenuDisp.LCD_DrawString(173 - (28 * (i % 7)), 21, cImport.cMenuDisp.BLACK, cImport.cMenuDisp.WHITE, apps[i].name, 26);
         if (i >= (apps.len - 1)) {
             i = 7;
         }
