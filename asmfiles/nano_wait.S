@@ -2,6 +2,7 @@
 .thumb
 .syntax unified
 
+.type nano_wait, %function
 .global nano_wait
 nano_wait:
     subs   r0, #83

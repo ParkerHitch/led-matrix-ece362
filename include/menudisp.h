@@ -9,7 +9,7 @@
 #define LIGHTGRAY   0XEF5B
 #define LGRAY       0XC618
 #define GRAY        0X8430
-#define MAXAPPS 10 // read the name
+// #define MAXAPPS 10 // read the name
 
 
 // shorthand notation for 8-bit and 16-bit unsigned integers

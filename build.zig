@@ -23,12 +23,26 @@ pub fn build(b: *std.Build) !void {
         .root_source_file = b.path("src/main.zig"),
     });
 
+    // ----
+    // Find zig apps
+    // ----
+    var zigApps = std.ArrayList([]const u8).init(b.allocator);
+    var zigAppsDir = try std.fs.openDirAbsolute(b.path("src/apps").getPath(b), .{ .iterate = true });
+    var zappsIter = zigAppsDir.iterate();
+    while (try zappsIter.next()) |app| {
+        if (app.kind == .file and std.mem.endsWith(u8, app.name, ".zig")) {
+            if (std.mem.eql(u8, app.name, "index.zig")) {
+                continue;
+            }
+            try zigApps.append(try b.allocator.dupe(u8, app.name[0 .. app.name.len - 4]));
+        }
+    }
+
     // -------
     // Compile the C files
     // -------
     var cApps = std.ArrayList([]const u8).init(b.allocator);
-
-    const c_compile_flags = [_][]const u8{ "-DSTM32F0", "-DSTM32F091xC" };
+    var cfileList = std.ArrayList([]const u8).init(b.allocator);
 
     const cfile_dir = try std.fs.openDirAbsolute(b.path("cfiles/").getPath(b), .{ .iterate = true });
     var cfile_walker = try cfile_dir.walk(b.allocator);
@@ -38,7 +52,8 @@ pub fn build(b: *std.Build) !void {
             if (std.mem.eql(u8, entry.basename[entry.basename.len - 2 ..], ".c")) {
                 const dir_path = try entry.dir.realpathAlloc(b.allocator, ".");
                 const abspath = try std.fs.path.resolve(b.allocator, &.{ dir_path, entry.basename });
-                firmware.add_c_source_file(CSource{ .file = .{ .cwd_relative = abspath }, .flags = &c_compile_flags });
+
+                try cfileList.append(abspath);
 
                 // if it's in the apps dir
                 if (std.mem.endsWith(u8, dir_path, "apps")) {
@@ -46,6 +61,11 @@ pub fn build(b: *std.Build) !void {
                 }
             }
         }
+    }
+    // Now that we know how many apps we have we can define the macro properly
+    const c_compile_flags = [_][]const u8{ "-DSTM32F0", "-DSTM32F091xC", try std.fmt.allocPrint(b.allocator, "-DMAXAPPS={}", .{cApps.items.len + zigApps.items.len}) };
+    for (cfileList.items) |abspath| {
+        firmware.add_c_source_file(CSource{ .file = .{ .cwd_relative = abspath }, .flags = &c_compile_flags });
     }
     // Add CMSIS headers
     firmware.add_include_path(b.path("CMSIS_5/CMSIS/Core/Include/"));
@@ -69,21 +89,6 @@ pub fn build(b: *std.Build) !void {
             } else {
                 std.debug.print("Error! Found non-asm file: {s} in asmfiles dir. Please use .S file extension", .{entry.name});
             }
-        }
-    }
-
-    // ----
-    // Find zig apps
-    // ----
-    var zigApps = std.ArrayList([]const u8).init(b.allocator);
-    var zigAppsDir = try std.fs.openDirAbsolute(b.path("src/apps").getPath(b), .{ .iterate = true });
-    var zappsIter = zigAppsDir.iterate();
-    while (try zappsIter.next()) |app| {
-        if (app.kind == .file and std.mem.endsWith(u8, app.name, ".zig")) {
-            if (std.mem.eql(u8, app.name, "index.zig")) {
-                continue;
-            }
-            try zigApps.append(try b.allocator.dupe(u8, app.name[0 .. app.name.len - 4]));
         }
     }
     options.addOption([]const []const u8, "zigApps", try zigApps.toOwnedSlice());

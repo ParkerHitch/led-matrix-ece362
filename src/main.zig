@@ -41,7 +41,7 @@ pub fn main() void {
     i = 0;
     while (i < 7) {
         cImport.cMenuDisp.LCD_DrawString(173 - (28 * (i % 7)), 21, cImport.cMenuDisp.BLACK, cImport.cMenuDisp.WHITE, "P-Cock", 26);
-        if (i >= (cImport.cMenuDisp.MAXAPPS - 1)) {
+        if (i >= (apps.len - 1)) {
             i = 7;
         }
         i += 1;
