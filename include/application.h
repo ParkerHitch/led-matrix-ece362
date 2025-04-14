@@ -42,7 +42,8 @@ typedef struct {
 
     // Metadata
     const char* name;
-    const char* author;
+    const char* authorfirst;
+    const char* authorlast;
     uint8_t targetFPS;
     // Optional parameters passed in
     bool needsAccel;

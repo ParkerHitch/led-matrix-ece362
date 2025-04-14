@@ -1,5 +1,9 @@
 const std = @import("std");
 const cfiles = @cImport(@cInclude("application.h"));
+pub const cMenuDisp = @cImport({
+    @cDefine("__PROGRAM_START", {});
+    @cInclude("menudisp.h");
+});
 const matrix = @import("subsystems/matrix.zig");
 const cAppNames = @import("options").cApps;
 
@@ -29,6 +33,7 @@ pub const cApps: [cAppNames.len]*Application = genExtern: {
 
 // Externally defined functions
 pub extern fn nano_wait(ns: c_uint) void;
+pub extern fn LCD_Setup() void;
 
 // Proper interoperability assertions
 comptime {

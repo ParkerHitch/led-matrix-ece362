@@ -5,7 +5,6 @@ const peripherals = microzig.chip.peripherals;
 const periph_types = microzig.chip.types.peripherals;
 const RCC = peripherals.RCC;
 const SPI2 = peripherals.SPI2;
-const GPIOA = peripherals.GPIOA;
 const GPIOB = peripherals.GPIOB;
 
 // Constants for all the colors we can use :p
@@ -56,8 +55,8 @@ pub var MENU: []const u8 = "Select App:"; // text for menu
 
 pub fn tft_select(val: i8) void {
     if (val == 0) {
-        // while ((SPI2.SR.read()) & (SPI2.SR.read().BSY == 1)) {}
-        while (SPI2.SR.read().BSY == 1) {}
+        while ((SPI2.SR.read().BSY == 1)) {}
+        // while (SPI2.SR.read().BSY == 1) {}
         GPIOB.BSRR.modify(.{
             .@"BS[10]" = 1,
         });
@@ -152,15 +151,19 @@ pub fn LCD_direction(direction: u8) void {
             lcddev.height = LCD_W;
             lcd_WriteReg(0x36, (1 << 3) | (1 << 7) | (1 << 5)); //BGR==1,MY==1,MX==0,MV==1
         },
-        else => {},
+        else => {
+            lcddev.width = LCD_W;
+            lcddev.height = LCD_H;
+            lcd_WriteReg(0x36, (1 << 3) | (0 << 6) | (0 << 7)); //BGR==1,MY==0,MX==0,MV==0
+        },
     }
 }
 
 // real shit
-pub fn LCD_Init(reset: fn (i8) void, select: fn (i8) void, reg_select: fn (i8) void) void {
-    lcddev.reset = tft_reset;
-    lcddev.select = tft_select;
-    lcddev.reg_select = tft_reg_select;
+pub fn LCD_Init(reset: *const fn (i8) void, select: *const fn (i8) void, reg_select: *const fn (i8) void) void {
+    lcddev.reset = &tft_reset;
+    lcddev.select = &tft_select;
+    lcddev.reg_select = &tft_reg_select;
     if (false) {
         lcddev.reset = reset;
     }
@@ -332,7 +335,7 @@ pub fn LCD_Setup() void {
     tft_select(0);
     tft_reset(0);
     tft_reg_select(0);
-    LCD_Init(tft_reset, tft_select, tft_reg_select);
+    LCD_Init(&tft_reset, &tft_select, &tft_reg_select);
 }
 
 // idk ngl

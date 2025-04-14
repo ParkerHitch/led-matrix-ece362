@@ -5,7 +5,8 @@ pub const app: Application = .{
     .deinitFn = &deinit,
     .renderFn = &update,
     .name = "Based App",
-    .author = "Some zig chad",
+    .authorfirst = "Some zig chad",
+    .authorlast = "Hitch's Cock",
 };
 
 fn init() callconv(.C) void {}

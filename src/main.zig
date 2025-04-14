@@ -11,6 +11,7 @@ const zigApps = @import("apps/index.zig").zigApps;
 const TestSR = LedMatrix.SrChain(8, .Div4);
 
 const ChipInit = @import("init/general.zig");
+
 // Make sure everything gets exported
 comptime {
     _ = @import("cExport.zig");
@@ -26,41 +27,31 @@ pub const apps = zigApps ++ cImport.cApps;
 
 pub fn main() void {
     ChipInit.internal_clock();
+    const MENU = "Select App:";
+    // const APPLIST = [_][]const u8{ "Never", "gonna", "give", "you", "up", "never", "gonna", "let", "you", "down." };
 
     //init_exti();
-    MenuDisp.LCD_Setup();
-    // cImport.nano_wait(10000000);
-    // ACT LIKE THIS IS US LOADING IN THE APPLICATIONS TO THE APPLICATION STRUCT
-    // MenuDisp.APPLIST[0] = "Never";
-    // MenuDisp.APPLIST[1] = "gonna";
-    // MenuDisp.APPLIST[2] = "give";
-    // MenuDisp.APPLIST[3] = "you";
-    // MenuDisp.APPLIST[4] = "up";
-    // MenuDisp.APPLIST[5] = "never";
-    // MenuDisp.APPLIST[6] = "gonna";
-    // MenuDisp.APPLIST[7] = "let";
-    // MenuDisp.APPLIST[8] = "you";
-    // MenuDisp.APPLIST[9] = "down.";
+    cImport.cMenuDisp.LCD_Setup();
     // SETS UP STARTING SCREEN
-    MenuDisp.LCD_Clear(MenuDisp.WHITE);
-    MenuDisp.LCD_DrawFillRectangle(204, 0, 240, 320, MenuDisp.LIGHTBLUE); // menu background
-    MenuDisp.LCD_DrawString(209, 5, MenuDisp.WHITE, MenuDisp.LIGHTBLUE, MenuDisp.MENU, 26); // menu text
+    cImport.cMenuDisp.LCD_Clear(MenuDisp.WHITE);
+    cImport.cMenuDisp.LCD_DrawFillRectangle(204, 0, 240, 320, cImport.cMenuDisp.LIGHTBLUE); // menu background
+    cImport.cMenuDisp.LCD_DrawString(209, 5, cImport.cMenuDisp.WHITE, cImport.cMenuDisp.LIGHTBLUE, MENU, 26); // menu text
     // loads first 7 applications
     var i: u8 = 0;
     i = 0;
     while (i < 7) {
-        MenuDisp.LCD_DrawString(173 - (28 * (i % 7)), 21, MenuDisp.BLACK, MenuDisp.WHITE, MenuDisp.APPLIST[i], 26);
-        if (i >= (MenuDisp.MAXAPPS - 1)) {
+        cImport.cMenuDisp.LCD_DrawString(173 - (28 * (i % 7)), 21, cImport.cMenuDisp.BLACK, cImport.cMenuDisp.WHITE, "P-Cock", 26);
+        if (i >= (cImport.cMenuDisp.MAXAPPS - 1)) {
             i = 7;
         }
         i += 1;
     }
     // loads arrow
-    MenuDisp.LCD_DrawFillRectangle(0, 0, 201, 21, MenuDisp.WHITE);
-    MenuDisp.LCD_DrawChar(173, 5, MenuDisp.BLACK, MenuDisp.WHITE, 62, 26);
+    cImport.cMenuDisp.LCD_DrawFillRectangle(0, 0, 201, 21, cImport.cMenuDisp.WHITE);
+    cImport.cMenuDisp.LCD_DrawChar(173, 5, cImport.cMenuDisp.BLACK, cImport.cMenuDisp.WHITE, 62, 26);
     // loads scroll bar
-    MenuDisp.LCD_DrawFillRectangle(0, 310, 203, 320, MenuDisp.GRAY);
-    MenuDisp.LCD_DrawFillRectangle(174, 310, 203, 320, MenuDisp.LIGHTGRAY);
+    cImport.cMenuDisp.LCD_DrawFillRectangle(0, 310, 203, 320, cImport.cMenuDisp.GRAY);
+    cImport.cMenuDisp.LCD_DrawFillRectangle(174, 310, 203, 320, cImport.cMenuDisp.LIGHTGRAY);
     while (true) {
         cImport.nano_wait(1000);
     }

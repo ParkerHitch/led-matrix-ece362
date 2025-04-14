@@ -11,7 +11,8 @@ Application myAppReal = {
     .deinitFn = &deinitMyApp,
 
     .name = "Fun App",
-    .author = "Homeboy",
+    .authorfirst = "Homeboy",
+    .authorlast = "pcock",
 
     .targetFPS = 30,
     .needsAccel = false,
