@@ -576,23 +576,23 @@ void LCD_DrawFillRectangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 c)
 // }
 
 // Jumps to app description page
-void jump_to_app(Application app)
+void jump_to_app(const Application* app)
 {
     RUNNING_APP = 1;
     char* by = "By:";
     char* back = "Back";
     LCD_Clear(WHITE);
     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
-    LCD_DrawString(209, 5, WHITE, LIGHTBLUE, app.name, 26); // menu text
+    LCD_DrawString(209, 5, WHITE, LIGHTBLUE, app->name, 26); // menu text
     LCD_DrawString(173, 5, BLACK, WHITE, by, 26);
-    LCD_DrawString(173, 53, BLACK, WHITE, app.authorfirst, 26);
-    LCD_DrawString(145, 53, BLACK, WHITE, app.authorlast, 26);
+    LCD_DrawString(173, 53, BLACK, WHITE, app->authorfirst, 26);
+    LCD_DrawString(145, 53, BLACK, WHITE, app->authorlast, 26);
     LCD_DrawString(5, 21, BLACK, WHITE, back, 26);
     LCD_DrawChar(5, 5, BLACK, WHITE, 62, 26);
 }
 
 // Reloads the "Select App:" menu
-void reload_menu(char* MENU, char** APPLIST)
+void reload_menu(const char* MENU, const Application* const* APPLIST)
 {
     RUNNING_APP = 0;
     int find_start = APP_NUM - (APP_NUM % 7);
@@ -603,7 +603,7 @@ void reload_menu(char* MENU, char** APPLIST)
     // loads correct 7 applications
     for (int i = find_start; i < (find_start + 7); i++)
     {
-        LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i], 26);
+        LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
         if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
         {
             i = APP_NUM + 7;
@@ -613,7 +613,7 @@ void reload_menu(char* MENU, char** APPLIST)
 }
 
 // Shift screen up or down depending on the direction
-void shift_screen(int dir, char** APPLIST)
+void shift_screen(int dir, const Application* const* APPLIST)
 {
     // 0 = down, 1 = up
     // LCD_Clear(0xffff);
@@ -625,7 +625,7 @@ void shift_screen(int dir, char** APPLIST)
         // loads apps when changing screen upward
         for (int i = APP_NUM; i > (APP_NUM - 7); i--)
         {
-            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i], 26);
+            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
             if ((i % 7) == 0) // ends loading when reaching top of last bit of apps
             {
                 i = APP_NUM - 7;
@@ -637,7 +637,7 @@ void shift_screen(int dir, char** APPLIST)
         // loads apps when changing screens down
         for (int i = APP_NUM; i < (APP_NUM + 7); i++)
         {
-            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i], 26);
+            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
             if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
             {
                 i = APP_NUM + 7;

@@ -23,12 +23,14 @@ pub const microzig_options = .{
     },
 };
 
+extern var APP_NUM: c_int;
+extern var RUNNING_APP: c_int;
+
 pub const apps = zigApps ++ cImport.cApps;
 
 pub fn main() void {
     ChipInit.internal_clock();
     const MENU = "Select App:";
-    // const APPLIST = [_][]const u8{ "Never", "gonna", "give", "you", "up", "never", "gonna", "let", "you", "down." };
 
     //init_exti();
     cImport.cMenuDisp.LCD_Setup();
@@ -52,62 +54,57 @@ pub fn main() void {
     // loads scroll bar
     cImport.cMenuDisp.LCD_DrawFillRectangle(0, 310, 203, 320, cImport.cMenuDisp.GRAY);
     cImport.cMenuDisp.LCD_DrawFillRectangle(174, 310, 203, 320, cImport.cMenuDisp.LIGHTGRAY);
+
+    var y_zeroed = true;
+    var prev_button_pressed = false;
+    var button_pressed = false;
+
+    var voltVec = [2]u32{ 0, 0 };
+    cImport.setup_adc(&voltVec);
+
     while (true) {
-        cImport.nano_wait(1000);
+        prev_button_pressed = button_pressed;
+        button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_2) != 0;
+        if (RUNNING_APP == 1) {
+            if (button_pressed and !prev_button_pressed) {
+                cImport.cMenuDisp.reload_menu(MENU, @ptrCast(&apps));
+                continue;
+            }
+        } else {
+            if (button_pressed and !prev_button_pressed) {
+                cImport.cMenuDisp.jump_to_app(@ptrCast(apps[@intCast(APP_NUM)]));
+                continue;
+            }
+            if (y_zeroed) {
+                if (voltVec[1] > 3500) {
+                    APP_NUM -= 1;
+                    if (APP_NUM < 0) {
+                        APP_NUM = apps.len - 1;
+                        cImport.cMenuDisp.shift_screen(1, @ptrCast(&apps));
+                    } else if (@mod(APP_NUM, 7) == 6) {
+                        cImport.cMenuDisp.shift_screen(1, @ptrCast(&apps));
+                    }
+                    y_zeroed = false;
+                    cImport.cMenuDisp.update_display();
+                } else if (voltVec[1] < 500) {
+                    APP_NUM += 1;
+                    if (APP_NUM >= apps.len) {
+                        APP_NUM = 0;
+                        cImport.cMenuDisp.shift_screen(0, @ptrCast(&apps));
+                    } else if (@mod(APP_NUM, 7) == 0) {
+                        cImport.cMenuDisp.shift_screen(1, @ptrCast(&apps));
+                    }
+                    y_zeroed = false;
+                    cImport.cMenuDisp.update_display();
+                }
+            } else {
+                if (voltVec[1] < 2400 and voltVec[1] > 1600) {
+                    y_zeroed = true;
+                }
+            }
+        }
+        cImport.nano_wait(3333333);
     }
-    // var frame = LedMatrix.Frame{};
-
-    // RCC.AHBENR.modify(.{
-    //     .GPIOBEN = 1,
-    //     .GPIOCEN = 1,
-    // });
-
-    // peripherals.GPIOC.MODER.modify(.{
-    //     .@"MODER[6]" = .Output,
-    //     .@"MODER[7]" = .Output,
-    // });
-    // peripherals.GPIOB.MODER.modify(.{
-    //     .@"MODER[2]" = .Input,
-    // });
-    // peripherals.GPIOB.PUPDR.modify(.{
-    //     .@"PUPDR[2]" = .PullDown,
-    // });
-
-    // peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .High });
-    // TestSR.setup();
-    // peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
-
-    // var SW3 = DebouncedBtn{};
-    // var last_state: u1 = 0;
-    // var id: u3 = 0;
-
-    // while (true) {
-    //     for (0..150_000) |_| {
-    //         asm volatile ("nop");
-    //     }
-    //     SW3.update(@intFromEnum(peripherals.GPIOB.IDR.read().@"IDR[2]"));
-    //     if (SW3.state == 1) {
-    //         peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .High });
-    //     } else {
-    //         peripherals.GPIOC.ODR.modify(.{ .@"ODR[6]" = .Low });
-    //     }
-    //     if (SW3.state == 1 and last_state == 0) {
-    //         TestSR.startShift(frame.layers[0].srs[0..3]);
-    //         // if (true) {
-    //         // ledData.set_led(id +% 7, .{ .r = 0, .g = 0, .b = 0 });
-    //         // ledData.set_led(id +% 6, .{ .r = 1, .g = 0, .b = 0 });
-    //         // ledData.set_led(id +% 5, .{ .r = 1, .g = 1, .b = 0 });
-    //         // ledData.set_led(id +% 4, .{ .r = 0, .g = 1, .b = 0 });
-    //         // ledData.set_led(id +% 3, .{ .r = 0, .g = 1, .b = 1 });
-    //         // ledData.set_led(id +% 2, .{ .r = 0, .g = 0, .b = 1 });
-    //         // ledData.set_led(id +% 1, .{ .r = 1, .g = 0, .b = 1 });
-    //         // ledData.set_led(id +% 0, .{ .r = 1, .g = 1, .b = 1 });
-    //         // TestSR.startShift(&ledData.rawArr);
-    //         // Wrapping addition
-    //         id -%= 1;
-    //     }
-    //     last_state = SW3.state;
-    // }
 }
 
 pub fn snek(frame: LedMatrix.Frame, red: u1, green: u1, blue: u1) void {

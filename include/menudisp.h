@@ -39,9 +39,9 @@ void LCD_DrawFillRectangle(u16, u16, u16, u16, u16);
 // void init_exti();
 // void EXTI0_1_IRQHandler();
 // void EXTI2_3_IRQHandler();
-void jump_to_app(Application);
-void reload_menu(char*, char**);
-void shift_screen(int, char**);
+void jump_to_app(const Application*);
+void reload_menu(const char*, const Application* const *);
+void shift_screen(int, const Application* const*);
 void update_display();
 
 // needed struct to change lcd

@@ -35,6 +35,8 @@ pub const cApps: [cAppNames.len]*Application = genExtern: {
 pub extern fn nano_wait(ns: c_uint) void;
 pub extern fn LCD_Setup() void;
 
+pub extern fn setup_adc(outVecVar: *[2]u32) void;
+
 // Proper interoperability assertions
 comptime {
     std.debug.assert(@sizeOf(matrix.LayerData) == @sizeOf(cLayerData));
