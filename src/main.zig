@@ -1,6 +1,7 @@
 const std = @import("std");
 const microzig = @import("microzig");
 const LedMatrix = @import("subsystems/matrix.zig");
+const IMU = @import("subsystems/imu.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
@@ -31,6 +32,8 @@ pub const apps = zigApps ++ cImport.cApps;
 pub fn main() void {
     ChipInit.internal_clock();
     const MENU = "Select App:";
+
+    IMU.init();
 
     //init_exti();
     cImport.cMenuDisp.LCD_Setup();
