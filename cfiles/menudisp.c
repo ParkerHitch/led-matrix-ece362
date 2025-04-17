@@ -506,21 +506,7 @@ void LCD_DrawFillRectangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 c)
 }
 
 // testing with buttons
-// void init_exti() {
-// 	RCC -> APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN;
-// 	RCC -> AHBENR |= RCC_AHBENR_GPIOAEN;
-// 	RCC -> AHBENR |= RCC_AHBENR_GPIOBEN;
-// 	GPIOB -> MODER &= ~0x30;
-// 	GPIOA -> MODER &= ~0x3;
-// 	GPIOB -> PUPDR |= 0x20;
-// 	GPIOA -> PUPDR |= 0x2;
-// 	SYSCFG -> EXTICR[0] &= ~0x7;
-// 	SYSCFG -> EXTICR[0] |= 0x1 << 8;
-// 	EXTI -> RTSR |= EXTI_RTSR_RT0 | EXTI_RTSR_RT2;
-// 	EXTI -> IMR |= EXTI_IMR_IM0 | EXTI_IMR_IM2;
-// 	NVIC -> ISER[0] |= 1 << EXTI0_1_IRQn;
-// 	NVIC -> ISER[0] |= 1 << EXTI2_3_IRQn;
-// }
+
 
 // testing going up with buttons
 // void EXTI0_1_IRQHandler() {

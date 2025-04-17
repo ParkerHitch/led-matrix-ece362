@@ -3,6 +3,7 @@ const microzig = @import("microzig");
 const LedMatrix = @import("subsystems/matrix.zig");
 const Screen: type = @import("subsystems/screen.zig");
 const Joystick: type = @import("subsystems/joystick.zig");
+const Button: type = @import("subsystems/button.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
@@ -64,6 +65,7 @@ pub fn main() void {
     // cImport.cMenuDisp.LCD_DrawFillRectangle(174, 310, 203, 320, cImport.cMenuDisp.LIGHTGRAY);
 
     Joystick.joystick_init();
+    cImport.init_button();
 
     while (true) {
         Joystick.joystick_update();
@@ -139,23 +141,4 @@ pub fn main() void {
     //     }
     //     cImport.nano_wait(3333333);
     // }
-}
-
-pub fn snek(frame: LedMatrix.Frame, red: u1, green: u1, blue: u1) void {
-    var x: u3 = 0;
-    var y: u3 = 0;
-    var z: u3 = 0;
-
-    while (z < 8) {
-        while (y < 8) {
-            while (x < 8) {
-                frame.set_pixel(x, y, z, .{ .r = red, .g = green, .b = blue });
-                x += 1;
-            }
-            y += 1;
-            x = 0;
-        }
-        z += 1;
-        y = 0;
-    }
 }
