@@ -6,3 +6,6 @@ zig-out/
 # clangd stuff
 compile_commands.json
 .cache/
+
+# editor stuff
+.vscode/
