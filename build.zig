@@ -2,6 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const microzig = @import("microzig");
 const CSource = std.Build.Module.CSourceFile;
+const zcc = @import("compile_commands");
 
 const MicroBuild = microzig.MicroBuild(.{
     .stm32 = true,
@@ -12,7 +13,7 @@ pub fn build(b: *std.Build) !void {
     const mb = MicroBuild.init(b, mz_dep) orelse return;
     const mzTarget: *const microzig.Target = mb.ports.stm32.chips.STM32F091RC;
     var options = b.addOptions();
-    // const zigTarget = b.resolveTargetQuery(mzTarget.chip.cpu);
+    var ctargets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
 
     const optimize = b.standardOptimizeOption(.{});
 
@@ -22,6 +23,10 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
         .root_source_file = b.path("src/main.zig"),
     });
+
+    // Add compiledb generation option
+    try ctargets.append(firmware.artifact);
+    zcc.createStep(b, "cdb", try ctargets.toOwnedSlice());
 
     // ----
     // Find zig apps
@@ -63,7 +68,11 @@ pub fn build(b: *std.Build) !void {
         }
     }
     // Now that we know how many apps we have we can define the macro properly
-    const c_compile_flags = [_][]const u8{ "-DSTM32F0", "-DSTM32F091xC", try std.fmt.allocPrint(b.allocator, "-DMAXAPPS={}", .{cApps.items.len + zigApps.items.len}) };
+    const c_compile_flags = [_][]const u8{
+        "-DSTM32F0",
+        "-DSTM32F091xC",
+        try std.fmt.allocPrint(b.allocator, "-DMAXAPPS={}", .{cApps.items.len + zigApps.items.len}),
+    };
     for (cfileList.items) |abspath| {
         firmware.add_c_source_file(CSource{ .file = .{ .cwd_relative = abspath }, .flags = &c_compile_flags });
     }
