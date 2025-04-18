@@ -1,4 +1,5 @@
 const std = @import("std");
+const buildMode = @import("builtin").mode;
 const microzig = @import("microzig");
 const LedMatrix = @import("subsystems/matrix.zig");
 const IMU = @import("subsystems/imu.zig");
@@ -8,6 +9,7 @@ const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 const MenuDisp = @import("subsystems/menudisp.zig");
 const zigApps = @import("apps/index.zig").zigApps;
+const UartDebug = @import("util/uartDebug.zig");
 
 const TestSR = LedMatrix.SrChain(8, .Div4);
 
@@ -31,6 +33,11 @@ pub const apps = zigApps ++ cImport.cApps;
 
 pub fn main() void {
     ChipInit.internal_clock();
+
+    if (buildMode == .Debug) {
+        UartDebug.init();
+    }
+
     const MENU = "Select App:";
 
     IMU.init();
