@@ -260,6 +260,29 @@ pub const FrameBuffer = extern struct {
     }
 };
 
+var frameBuff1: FrameBuffer = .{};
+var frameBuff2: FrameBuffer = .{};
+var drawBuff: *FrameBuffer = &frameBuff1;
+
+pub fn clearFrame(color: Led) void {
+    for (0..7) |x| {
+        for (0..7) |y| {
+            for (0..7) |z| {
+                drawBuff.set_pixel(x, y, z, color);
+            }
+        }
+    }
+}
+
+pub fn setPixel(x: u3, y: u3, z: u3, color: Led) void {
+    drawBuff.set_pixel(x, y, z, color);
+}
+
+pub fn render() void {
+    startShift(drawBuff);
+    drawBuff = if (drawBuff == &frameBuff1) &frameBuff2 else &frameBuff1;
+}
+
 // Way harder to put this inside a test block, as those need to run on the machine, which is the microcontroller
 // Random comptime block works just as well for this memory layout stuff
 comptime {
