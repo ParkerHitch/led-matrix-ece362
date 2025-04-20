@@ -8,7 +8,6 @@ const cImport = @import("cImport.zig");
 const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
-const MenuDisp = @import("subsystems/menudisp.zig");
 const UartDebug = @import("util/uartDebug.zig");
 const zigApps = @import("apps/index.zig").zigApps;
 const buildMode = @import("builtin").mode;
