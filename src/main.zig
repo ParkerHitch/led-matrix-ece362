@@ -10,6 +10,8 @@ const RCC = microzig.chip.peripherals.RCC;
 const MenuDisp = @import("subsystems/menudisp.zig");
 const zigApps = @import("apps/index.zig").zigApps;
 
+const testApp = @import("apps/testApp.zig");
+
 const TestSR = LedMatrix.SrChain(8, .Div4);
 
 const ChipInit = @import("init/general.zig");
@@ -32,6 +34,9 @@ pub const apps = zigApps ++ cImport.cApps;
 
 pub fn main() void {
     ChipInit.internal_clock();
+    LedMatrix.init(.Div4);
+    // NOTE: TEMP
+    testApp.update();
 
     // initializing display
     const MENU = "Select App:";
