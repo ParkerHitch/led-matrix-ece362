@@ -3,11 +3,11 @@ const microzig = @import("microzig");
 const LedMatrix = @import("subsystems/matrix.zig");
 const Screen: type = @import("subsystems/screen.zig");
 const Joystick: type = @import("subsystems/joystick.zig");
+const Button: type = @import("subsystems/button.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
-const MenuDisp = @import("subsystems/menudisp.zig");
 const UartDebug = @import("util/uartDebug.zig");
 const zigApps = @import("apps/index.zig").zigApps;
 const buildMode = @import("builtin").mode;
@@ -43,6 +43,7 @@ pub fn main() void {
     const MENU = "Select App:";
     Screen.screen_init();
     Joystick.joystick_init();
+    cImport.init_button();
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 

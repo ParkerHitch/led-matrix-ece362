@@ -16,7 +16,8 @@ Application myApp = {
 
     .targetFPS = 30,
     .needsAccel = false,
-    .needsJoystick = false
+    .needsJoystick = false,
+    .needsButton = false
 };
 
 // Application* myApp = &myAppReal;

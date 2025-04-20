@@ -23,7 +23,7 @@ typedef struct {
 // Application stuff
 // =================
 
-// The function signature that the main frame renering loop has
+// The function signature that the main frame rendering loop has
 typedef void (*RenderFrameFn)(void);
 
 // Your application
@@ -48,6 +48,7 @@ typedef struct {
     // Optional parameters passed in
     bool needsAccel;
     bool needsJoystick;
+    bool needsButton;
 } Application;
 
 
