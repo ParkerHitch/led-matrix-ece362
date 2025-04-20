@@ -47,6 +47,8 @@ pub fn main() void {
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
+    UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
+
     while (true) {
         Joystick.joystick_update();
 
