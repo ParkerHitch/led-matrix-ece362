@@ -5,6 +5,8 @@ const apps = @import("../main.zig").apps;
 
 var y_zeroed = true;
 var prev_y_zeroed: bool = true;
+var x_zeroed = true;
+var prev_x_zeroed = true;
 var prev_button_pressed = false;
 var cur_button_pressed = false;
 
@@ -19,6 +21,8 @@ pub fn joystick_update() void {
     cur_button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_2) != 0;
     prev_y_zeroed = y_zeroed;
     y_zeroed = (voltVec[1] > 1600 and voltVec[1] < 2400);
+    prev_x_zeroed = x_zeroed;
+    x_zeroed = (voltVec[0] > 1600 and voltVec[0] < 2400);
 }
 
 pub fn button_pressed() bool {
@@ -36,6 +40,22 @@ pub fn moved_up() bool {
 pub fn moved_down() bool {
     if (prev_y_zeroed and voltVec[1] < 500) {
         y_zeroed = false;
+        return true;
+    }
+    return false;
+}
+
+pub fn moved_right() bool {
+    if (prev_x_zeroed and voltVec[0] > 3500) {
+        x_zeroed = false;
+        return true;
+    }
+    return false;
+}
+
+pub fn moved_left() bool {
+    if (prev_x_zeroed and voltVec[0] < 500) {
+        x_zeroed = false;
         return true;
     }
     return false;
