@@ -5,8 +5,8 @@ const cmsis = cImport.cmsis;
 const peripherals = microzig.chip.peripherals;
 const RCC = peripherals.RCC;
 const TIM3 = peripherals.TIM3;
-const maxTimARR = 0x0000ffff;
-const clkPrescale = 48000 - 1;
+const maxTimARR: u32 = 0x0000ffff;
+const clkPrescale: u32 = 48000 - 1;
 
 
 pub fn init() void {
@@ -18,10 +18,10 @@ pub fn init() void {
     // prescale the clock the 1kHz so each count represents 1 milisecond
     TIM3.PSC = clkPrescale;
     // set arr to allow max count time between delta time calls
-    TIM3.ARR = maxTimARR;
+    TIM3.ARR = @bitCast(maxTimARR);
 
     TIM3.CR1.modify(.{
-        .DIR = 0, // upcounter
+        .DIR = .Up, // upcounter
     });
 
 }
@@ -46,10 +46,11 @@ pub fn start() void {
 
 /// get time in mili seconds since start or previous mili()/seconds() call
 pub fn mili() u32 {
+    const timePause: u32 = 0;
     // pause timer
-    TIM3.ARR = 0; 
+    TIM3.ARR = @bitCast(timePause); 
 
-    const deltaTime: u32 = TIM3.CNT;
+    const deltaTime: u32 = @bitCast(TIM3.CNT);
 
     // let a software update generation reset timer count without interupts or side effect
     TIM3.CR1.modify(.{
@@ -67,7 +68,7 @@ pub fn mili() u32 {
     });
 
     // resume timer
-    TIM3.ARR = maxTimARR;
+    TIM3.ARR = @bitCast(maxTimARR);
 
     return deltaTime;
 }
