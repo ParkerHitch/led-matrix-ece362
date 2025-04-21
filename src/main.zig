@@ -40,8 +40,6 @@ pub fn main() void {
 
     const MENU = "Select App:";
 
-    IMU.init();
-
     //init_exti();
     cImport.cMenuDisp.LCD_Setup();
     // SETS UP STARTING SCREEN
@@ -72,7 +70,10 @@ pub fn main() void {
     var voltVec = [2]u32{ 0, 0 };
     cImport.setup_adc(&voltVec);
 
+    IMU.init();
+
     while (true) {
+        IMU.update();
         prev_button_pressed = button_pressed;
         button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_2) != 0;
         if (RUNNING_APP == 1) {
@@ -113,7 +114,7 @@ pub fn main() void {
                 }
             }
         }
-        cImport.nano_wait(3333333);
+        cImport.nano_wait(33333330);
     }
 }
 
