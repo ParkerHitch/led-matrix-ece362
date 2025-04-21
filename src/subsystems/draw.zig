@@ -1,14 +1,6 @@
 const matrix = @import("matrix.zig");
 
-const ColorEnum = enum {
-    RED,
-    GREEN,
-    BLUE,
-    YELLOW,
-    PURPLE,
-    WHITE,
-    OFF
-};
+pub const ColorEnum = enum { RED, GREEN, BLUE, YELLOW, PURPLE, WHITE, OFF };
 
 /// Returns a renderable color struct for functions
 /// like matrix.setPixel() and matrix.clearFrame()

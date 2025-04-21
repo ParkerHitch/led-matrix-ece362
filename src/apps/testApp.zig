@@ -4,17 +4,14 @@ const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 
 pub const app: Application = .{
-    .initFn = &init,
-    .deinitFn = &deinit,
-    .renderFn = &update,
-    .name = "Test App",
+    .renderFn = &appMain,
+
+    .name = "TestZigApp",
     .authorfirst = "John",
     .authorlast = "Burns",
 };
 
-fn init() callconv(.C) void {}
-
-pub fn update() callconv(.C) void {
+pub fn appMain() callconv(.C) void {
     const updateRate: u32 = 1000; // miliseconds per update
     var timeSinceUpdate: u32 = 0;
     const drawColor = [3]matrix.Led{ .{ .r = 1, .g = 0, .b = 0 }, .{ .r = 0, .g = 1, .b = 0 }, .{ .r = 0, .g = 0, .b = 1 } };
@@ -32,5 +29,3 @@ pub fn update() callconv(.C) void {
         timeSinceUpdate += deltaTime.mili();
     }
 }
-
-fn deinit() callconv(.C) void {}

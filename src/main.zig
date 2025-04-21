@@ -44,7 +44,7 @@ pub fn main() void {
     }
 
     // NOTE: TEMP
-    const tempAppIdx = 0;
+    const tempAppIdx = 1;
     const appMain = apps[tempAppIdx].renderFn orelse null;
     appMain();
 

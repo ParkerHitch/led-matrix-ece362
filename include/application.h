@@ -35,12 +35,6 @@ typedef struct {
     const char* name;
     const char* authorfirst;
     const char* authorlast;
-    uint8_t targetFPS;
-
-    // Optional parameters passed in
-    bool needsAccel;
-    bool needsJoystick;
-    bool needsButton;
 } Application;
 
 

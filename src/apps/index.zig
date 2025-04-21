@@ -2,7 +2,7 @@ const Application = @import("../cImport.zig").Application;
 const std = @import("std");
 // const zigAppNames = @import("options").zigApps;
 
-pub const zigApps = [_]*const Application{&@import("testApp.zig").app};
+pub const zigApps = [_]*const Application{ &@import("testApp.zig").app, &@import("axisApp.zig").app };
 
 // comptime {
 //     // TODO:

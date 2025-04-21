@@ -200,7 +200,8 @@ pub const FrameBuffer = extern struct {
     layers: [8]LayerData = defaultLayers: {
         var layers: [8]LayerData = .{LayerData{ .layerId = 0 }} ** 8;
         for (0..8) |i| {
-            layers[i].layerId = i;
+            layers[7 - i].layerId = i; // NOTE: hardware inverted z
+
         }
         break :defaultLayers layers;
     },
@@ -301,7 +302,7 @@ comptime {
     var frame: FrameBuffer = .{};
     frame.set_pixel(2, 7, 0, .{ .r = 1, .g = 1, .b = 1 });
     // @compileLog(frame.layers[0].srs);
-    std.debug.assert(frame.layers[0].layerId == 0);
+    std.debug.assert(frame.layers[0].layerId == 7); // NOTE: hardware inverted z
     std.debug.assert(frame.layers[0].srs[0] == 0xC0);
     std.debug.assert(frame.layers[0].srs[1] == 0x01);
 }

@@ -1,35 +1,18 @@
 #include "application.h"
 #include <stdint.h>
 
-void initMyApp();
-void deinitMyApp();
-void renderMyApp();
+void appMain();
 
 Application myApp = {
-    .initFn = &initMyApp,
-    .renderFn = &renderMyApp,
-    .deinitFn = &deinitMyApp,
+    .renderFn = &appMain,
 
-    .name = "Fun App",
-    .authorfirst = "Homeboy",
-    .authorlast = "pcock",
-
-    .targetFPS = 30,
-    .needsAccel = false,
-    .needsJoystick = false,
-    .needsButton = false
+    .name = "Template C App",
+    .authorfirst = "John",
+    .authorlast = "Burns",
 };
 
-// Application* myApp = &myAppReal;
 
-
-void initMyApp() {
-    return;
-}
-void deinitMyApp() {
-    return;
-}
-void renderMyApp() {
+void appMain() {
     // set_pixel(buffer, 0,0,0, RED);
     // set_pixel(buffer, 1,1,1, BLUE);
     return;
