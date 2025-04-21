@@ -6,7 +6,7 @@ const matrix = @import("../subsystems/matrix.zig");
 pub const app: Application = .{
     .renderFn = &render,
 
-    .name = "TestZigApp",
+    .name = "RGB XYZ Axis",
     .authorfirst = "John",
     .authorlast = "Burns",
 };

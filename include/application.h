@@ -61,4 +61,4 @@ extern void setPixel(int32_t x, int32_t y, int32_t z, uint16_t color);
 extern void clearFrame(uint16_t color);
 extern void matrixRender();
 extern void dtStart(DeltaTime* dt);
-extern unsigned int dtMili(DeltaTime* dt);
+extern unsigned int dtMilli(DeltaTime* dt);

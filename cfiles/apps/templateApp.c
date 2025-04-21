@@ -30,7 +30,7 @@ void appMain() {
     };
 
     while (true) {
-        dtSinceUpdate += dtMili(&dt);
+        dtSinceUpdate += dtMilli(&dt);
         if (dtSinceUpdate >= miliPerUpdate) {
             colorIdx = colorIdx >= 7 ? 0 : colorIdx + 1;
             dtSinceUpdate = 0;
@@ -41,4 +41,3 @@ void appMain() {
         matrixRender();
     }
 }
-
