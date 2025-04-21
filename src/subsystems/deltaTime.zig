@@ -8,7 +8,6 @@ const TIM3 = peripherals.TIM3;
 const maxTimARR: u32 = 0x0000ffff;
 const clkPrescale: u32 = 48000 - 1;
 
-
 pub fn init() void {
     // enable TIM3 clock source
     RCC.APB1ENR.modify(.{
@@ -23,7 +22,6 @@ pub fn init() void {
     TIM3.CR1.modify(.{
         .DIR = .Up, // upcounter
     });
-
 }
 
 pub fn start() void {
@@ -48,7 +46,7 @@ pub fn start() void {
 pub fn mili() u32 {
     const timePause: u32 = 0;
     // pause timer
-    TIM3.ARR = @bitCast(timePause); 
+    TIM3.ARR = @bitCast(timePause);
 
     const deltaTime: u32 = @bitCast(TIM3.CNT);
 

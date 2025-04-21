@@ -15,25 +15,21 @@ pub const app: Application = .{
 fn init() callconv(.C) void {}
 
 pub fn update() callconv(.C) void {
-    const updateRate: f32 = 1.0; // updates per second
-    var timeSinceUpdate: f32 = 0.0;
-    const drawColor = [3]matrix.Led{
-        .{ .r = 1, .g = 0, .b = 0 },
-        .{ .r = 0, .g = 1, .b = 0 },
-        .{ .r = 0, .g = 0, .b = 1 }
-    };
+    const updateRate: u32 = 1000; // miliseconds per update
+    var timeSinceUpdate: u32 = 0;
+    const drawColor = [3]matrix.Led{ .{ .r = 1, .g = 0, .b = 0 }, .{ .r = 0, .g = 1, .b = 0 }, .{ .r = 0, .g = 0, .b = 1 } };
     var drawIdx: u32 = 0;
     deltaTime.start();
 
     while (true) {
-        timeSinceUpdate += deltaTime.seconds();
         if (timeSinceUpdate >= updateRate) {
-             drawIdx = if (drawIdx >= 2) 0 else drawIdx + 1;
-             timeSinceUpdate = 0.0;
-         }
+            drawIdx = if (drawIdx >= 2) 0 else drawIdx + 1;
+            timeSinceUpdate = 0.0;
+        }
 
         matrix.clearFrame(drawColor[drawIdx]);
         matrix.render();
+        timeSinceUpdate += deltaTime.mili();
     }
 }
 

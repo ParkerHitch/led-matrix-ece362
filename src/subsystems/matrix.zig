@@ -189,7 +189,7 @@ pub const Led = packed struct {
     b: u1,
 };
 
-pub const Color = enum { R, G, B };
+const Color = enum { R, G, B };
 
 pub const LayerData = extern struct {
     layerId: u8,

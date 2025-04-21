@@ -28,26 +28,13 @@ typedef void (*RenderFrameFn)(void);
 
 // Your application
 typedef struct {
-    // Function that will be run when your app is started
-    // Setup all peripherals here
-    void (*initFn)(void);
-
-    // Main rendering loop
-    // Will be called periodically according to targetFPS
+    // Application main function
     RenderFrameFn renderFn;
-
-    // Function that will be run when your app stops
-    // Free memory and deinit peripherals here
-    void (*deinitFn)(void);
 
     // Metadata
     const char* name;
     const char* authorfirst;
     const char* authorlast;
-    uint8_t targetFPS;
-    // Optional parameters passed in
-    bool needsAccel;
-    bool needsJoystick;
 } Application;
 
 

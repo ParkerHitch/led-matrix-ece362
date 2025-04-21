@@ -14,6 +14,7 @@ const zigApps = @import("apps/index.zig").zigApps;
 // NOTE: Temp
 const testApp = @import("apps/testApp.zig");
 
+// NOTE: what is this here for?
 const TestSR = LedMatrix.SrChain(8, .Div4);
 
 const ChipInit = @import("init/general.zig");
@@ -38,9 +39,11 @@ pub fn main() void {
     ChipInit.internal_clock();
     LedMatrix.init(.Div4);
     deltaTime.init();
-    
+
     // NOTE: TEMP
-    testApp.update();
+    const tempAppIdx = 0;
+    const appMain = apps[tempAppIdx].renderFn orelse null;
+    appMain();
 
     // initializing display
     const MENU = "Select App:";
