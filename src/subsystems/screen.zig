@@ -1,7 +1,6 @@
 const microzig = @import("microzig");
 const std = @import("std");
 const cImport = @import("../cImport.zig");
-const MenuDisp: type = @import("menudisp.zig");
 const Joystick: type = @import("joystick.zig");
 const apps = @import("../main.zig").apps;
 
@@ -14,7 +13,7 @@ pub fn screen_init() void {
     //init_exti();
     cImport.cMenuDisp.LCD_Setup();
     // SETS UP STARTING SCREEN
-    cImport.cMenuDisp.LCD_Clear(MenuDisp.WHITE);
+    cImport.cMenuDisp.LCD_Clear(cImport.cMenuDisp.WHITE);
     cImport.cMenuDisp.LCD_DrawFillRectangle(204, 0, 240, 320, cImport.cMenuDisp.LIGHTBLUE); // menu background
     cImport.cMenuDisp.LCD_DrawString(209, 5, cImport.cMenuDisp.WHITE, cImport.cMenuDisp.LIGHTBLUE, MENU, 26); // menu text
     // loads first 7 applications

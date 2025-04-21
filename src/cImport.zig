@@ -36,6 +36,7 @@ pub extern fn nano_wait(ns: c_uint) void;
 pub extern fn LCD_Setup() void;
 
 pub extern fn setup_adc(outVecVar: *[2]u32) void;
+pub extern fn init_button() void;
 
 // Proper interoperability assertions
 comptime {
