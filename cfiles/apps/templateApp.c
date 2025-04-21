@@ -13,6 +13,8 @@ Application templateApp = {
 
 
 void appMain() {
+    DeltaTime dt = (DeltaTime){ .startTime = 0, .currTime = 0 };
+    dtStart(&dt);
     int32_t colorIdx = 0;
     uint32_t dtSinceUpdate = 0;
     const uint32_t miliPerUpdate = 1000;
@@ -27,9 +29,8 @@ void appMain() {
         BLACK
     };
 
-    dtStart();
     while (true) {
-        dtSinceUpdate += dtMili();
+        dtSinceUpdate += dtMili(&dt);
         if (dtSinceUpdate >= miliPerUpdate) {
             colorIdx = colorIdx >= 7 ? 0 : colorIdx + 1;
             dtSinceUpdate = 0;

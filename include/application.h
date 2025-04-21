@@ -37,6 +37,12 @@ typedef struct {
     const char* authorlast;
 } Application;
 
+// DeltaTime struct
+typedef struct {
+    uint32_t startTime;
+    uint32_t currTime;
+} DeltaTime;
+
 
 
 // ================
@@ -54,6 +60,5 @@ typedef struct {
 extern void setPixel(int32_t x, int32_t y, int32_t z, uint16_t color);
 extern void clearFrame(uint16_t color);
 extern void matrixRender();
-extern void dtStart();
-extern unsigned int dtMili();
-extern float dtSeconds();
+extern void dtStart(DeltaTime* dt);
+extern unsigned int dtMili(DeltaTime* dt);

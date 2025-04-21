@@ -28,53 +28,50 @@ pub fn init() void {
     });
 }
 
-pub fn start() callconv(.C) void {
-    // ensure timer is enabled & let a software update generation reset timer count without interupts or side effect
-    TIM3.CR1.modify(.{
-        .UDIS = 1,
-    });
+pub const DeltaTime = struct {
+    startTime: u32 = 0,
+    currTime: u32 = 0,
 
-    // reset timer count
-    TIM3.EGR.modify(.{
-        .UG = 1,
-    });
+    pub fn start(self: *DeltaTime) void {
+        self.currTime = @bitCast(TIM3.CNT);
+    }
 
-    // allow timer allow automatic counter reload
-    TIM3.CR1.modify(.{
-        .UDIS = 0,
-    });
+    pub fn mili(self: *DeltaTime) u32 {
+        self.startTime = self.currTime;
+        self.currTime = @bitCast(TIM3.CNT);
+
+        if (self.startTime < self.currTime) {
+            return self.currTime - self.startTime;
+        } else if (self.startTime > self.currTime) {
+            return maxTimARR - self.startTime + self.currTime;
+        } else {
+            // WARN: realllly scuffed
+            cImport.nano_wait(3000000); // wait a couple milli seconds
+            return self.mili(); // to prevent updates from never happening if is dt updated to quickly
+        }
+    }
+};
+
+//---------------//
+//---C-Support---//
+//---------------//
+
+pub export fn dtStart(dt: *cImport.DeltaTime) callconv(.C) void {
+    dt.currTime = @bitCast(TIM3.CNT);
 }
 
 /// get time in mili seconds since start or previous mili()/seconds() call
-pub fn mili() callconv(.C) c_uint {
-    const timePause: u32 = 0;
-    // pause timer
-    TIM3.ARR = @bitCast(timePause);
+pub export fn dtMili(dt: *cImport.DeltaTime) callconv(.C) c_uint {
+    dt.startTime = dt.currTime;
+    dt.currTime = @bitCast(TIM3.CNT);
 
-    const deltaTime: u32 = @bitCast(TIM3.CNT);
-
-    // let a software update generation reset timer count without interupts or side effect
-    TIM3.CR1.modify(.{
-        .UDIS = 1,
-    });
-
-    // reset timer count
-    TIM3.EGR.modify(.{
-        .UG = 1,
-    });
-
-    // allow timer allow automatic counter reload
-    TIM3.CR1.modify(.{
-        .UDIS = 0,
-    });
-
-    // resume timer
-    TIM3.ARR = @bitCast(maxTimARR);
-
-    return deltaTime;
-}
-
-/// get float time in seconds since start or previous mili()/seconds() call
-pub fn seconds() callconv(.C) f32 {
-    return @as(f32, @floatFromInt(mili())) / 1000.0;
+    if (dt.startTime < dt.currTime) {
+        return dt.currTime - dt.startTime;
+    } else if (dt.startTime > dt.currTime) {
+        return maxTimARR - dt.startTime + dt.currTime;
+    } else {
+        // WARN: realllly scuffed
+        cImport.nano_wait(3000000); // wait a couple milli seconds
+        return dtMili(dt); // to prevent updates from never happening if is dt updated to quickly
+    }
 }
