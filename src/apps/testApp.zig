@@ -6,7 +6,7 @@ const matrix = @import("../subsystems/matrix.zig");
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "TestZigApp",
+    .name = "Template Zig App",
     .authorfirst = "John",
     .authorlast = "Burns",
 };
@@ -19,6 +19,7 @@ pub fn appMain() callconv(.C) void {
     deltaTime.start();
 
     while (true) {
+        timeSinceUpdate += deltaTime.mili();
         if (timeSinceUpdate >= updateRate) {
             drawIdx = if (drawIdx >= 2) 0 else drawIdx + 1;
             timeSinceUpdate = 0.0;
@@ -26,6 +27,5 @@ pub fn appMain() callconv(.C) void {
 
         matrix.clearFrame(drawColor[drawIdx]);
         matrix.render();
-        timeSinceUpdate += deltaTime.mili();
     }
 }

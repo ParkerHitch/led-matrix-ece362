@@ -42,9 +42,18 @@ typedef struct {
 // ================
 // Helper functions
 // ================
-#define RED 0b100
+#define BLUE 0b100
 #define GREEN 0b010
-#define BLUE 0b001
-extern void set_pixel(FrameBuffer* frame, uint8_t x, uint8_t y, uint8_t z, uint8_t color);
+#define RED 0b001
+#define TIEL 0b110
+#define PURPLE 0b101
+#define YELLOW 0b011
+#define WHITE 0b111
+#define BLACK 0b000
 
-
+extern void setPixel(int32_t x, int32_t y, int32_t z, uint16_t color);
+extern void clearFrame(uint16_t color);
+extern void matrixRender();
+extern void dtStart();
+extern unsigned int dtMili();
+extern float dtSeconds();

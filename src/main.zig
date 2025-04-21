@@ -12,10 +12,6 @@ const RCC = microzig.chip.peripherals.RCC;
 const UartDebug = @import("util/uartDebug.zig");
 const zigApps = @import("apps/index.zig").zigApps;
 const buildMode = @import("builtin").mode;
-
-// NOTE: what is this here for?
-const TestSR = LedMatrix.SrChain(8, .Div4);
-
 const ChipInit = @import("init/general.zig");
 
 // Make sure everything gets exported
@@ -45,7 +41,7 @@ pub fn main() void {
 
     // NOTE: TEMP
     const tempAppIdx = 1;
-    const appMain = apps[tempAppIdx].renderFn orelse null;
+    const appMain = apps[tempAppIdx].renderFn.?;
     appMain();
 
     // initializing display

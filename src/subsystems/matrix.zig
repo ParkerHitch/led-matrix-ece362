@@ -207,11 +207,11 @@ pub const FrameBuffer = extern struct {
     },
 
     /// Right-handed coordinates where z is up
-    pub fn set_pixel(self: *FrameBuffer, x: u32, y: u32, z: u32, color: Led) void {
-        const layer: *LayerData = &self.layers[z];
-        const newY: u32 = 7 - y;
-        const offset: u32 = 3 * newY;
-        const row: []u8 = layer.srs[offset..];
+    pub fn set_pixel(self: *FrameBuffer, x: i32, y: i32, z: i32, color: Led) void {
+        const layer: *LayerData = &self.layers[@intCast(z)];
+        const newY: i32 = 7 - y;
+        const offset: i32 = 3 * newY;
+        const row: []u8 = layer.srs[@intCast(offset)..];
         const rawColor: u8 = @intCast(@as(u3, @bitCast(color)));
         switch (x) {
             0 => {
@@ -271,17 +271,17 @@ pub fn clearFrame(color: Led) void {
     for (0..8) |x| {
         for (0..8) |y| {
             for (0..8) |z| {
-                drawBuff.set_pixel(x, y, z, color);
+                drawBuff.set_pixel(@intCast(x), @intCast(y), @intCast(z), color);
             }
         }
     }
 }
 
-pub fn setPixel(x: u32, y: u32, z: u32, color: Led) void {
+pub fn setPixel(x: i32, y: i32, z: i32, color: Led) void {
     drawBuff.set_pixel(x, y, z, color);
 }
 
-pub fn render() void {
+pub fn render() callconv(.C) void {
     startShift(drawBuff);
     drawBuff = if (drawBuff == &frameBuff1) &frameBuff2 else &frameBuff1;
 }

@@ -16,13 +16,13 @@ pub fn render() callconv(.C) void {
         matrix.clearFrame(.{ .r = 0, .g = 0, .b = 0 });
 
         for (1..8) |x| {
-            matrix.setPixel(x, 0, 0, .{ .r = 1, .g = 0, .b = 0 });
+            matrix.setPixel(@intCast(x), 0, 0, .{ .r = 1, .g = 0, .b = 0 });
         }
         for (1..8) |y| {
-            matrix.setPixel(0, y, 0, .{ .r = 0, .g = 1, .b = 0 });
+            matrix.setPixel(0, @intCast(y), 0, .{ .r = 0, .g = 1, .b = 0 });
         }
         for (1..8) |z| {
-            matrix.setPixel(0, 0, z, .{ .r = 0, .g = 0, .b = 1 });
+            matrix.setPixel(0, 0, @intCast(z), .{ .r = 0, .g = 0, .b = 1 });
         }
         matrix.setPixel(0, 0, 0, .{ .r = 1, .g = 1, .b = 1 });
 

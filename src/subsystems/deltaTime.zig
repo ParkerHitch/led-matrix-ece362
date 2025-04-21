@@ -22,12 +22,15 @@ pub fn init() void {
     TIM3.CR1.modify(.{
         .DIR = .Up, // upcounter
     });
-}
 
-pub fn start() void {
-    // ensure timer is enabled & let a software update generation reset timer count without interupts or side effect
     TIM3.CR1.modify(.{
         .CEN = 1,
+    });
+}
+
+pub fn start() callconv(.C) void {
+    // ensure timer is enabled & let a software update generation reset timer count without interupts or side effect
+    TIM3.CR1.modify(.{
         .UDIS = 1,
     });
 
@@ -43,7 +46,7 @@ pub fn start() void {
 }
 
 /// get time in mili seconds since start or previous mili()/seconds() call
-pub fn mili() u32 {
+pub fn mili() callconv(.C) c_uint {
     const timePause: u32 = 0;
     // pause timer
     TIM3.ARR = @bitCast(timePause);
@@ -72,6 +75,6 @@ pub fn mili() u32 {
 }
 
 /// get float time in seconds since start or previous mili()/seconds() call
-pub fn seconds() f32 {
+pub fn seconds() callconv(.C) f32 {
     return @as(f32, @floatFromInt(mili())) / 1000.0;
 }
