@@ -1,16 +1,78 @@
-const time = @import("std").time;
+/// Uses TIM3 to capture delta time since last call
+const microzig = @import("microzig");
+const cImport = @import("../cImport.zig");
+const cmsis = cImport.cmsis;
+const peripherals = microzig.chip.peripherals;
+const RCC = peripherals.RCC;
+const TIM3 = peripherals.TIM3;
+const maxTimARR = 0x0000ffff;
+const clkPrescale = 48000 - 1;
 
-var prevTime: i64 = 0;
-var currTime: i64 = 0;
 
-pub fn start() void {
-    currTime = time.milliTimestamp();
+pub fn init() void {
+    // enable TIM3 clock source
+    RCC.APB1ENR.modify(.{
+        .TIM3EN = 1,
+    });
+
+    // prescale the clock the 1kHz so each count represents 1 milisecond
+    TIM3.PSC = clkPrescale;
+    // set arr to allow max count time between delta time calls
+    TIM3.ARR = maxTimARR;
+
+    TIM3.CR1.modify(.{
+        .DIR = 0, // upcounter
+    });
+
 }
 
-// returns the delta Time in seconds
-pub fn get() f32 {
-    prevTime = currTime;
-    currTime = time.milliTimestamp();
-    const deltaTime: f32 = @as(f32, @floatFromInt(currTime - prevTime)) / 1000.0;
+pub fn start() void {
+    // ensure timer is enabled & let a software update generation reset timer count without interupts or side effect
+    TIM3.CR1.modify(.{
+        .CEN = 1,
+        .UDIS = 1,
+    });
+
+    // reset timer count
+    TIM3.EGR.modify(.{
+        .UG = 1,
+    });
+
+    // allow timer allow automatic counter reload
+    TIM3.CR1.modify(.{
+        .UDIS = 0,
+    });
+}
+
+/// get time in mili seconds since start or previous mili()/seconds() call
+pub fn mili() u32 {
+    // pause timer
+    TIM3.ARR = 0; 
+
+    const deltaTime: u32 = TIM3.CNT;
+
+    // let a software update generation reset timer count without interupts or side effect
+    TIM3.CR1.modify(.{
+        .UDIS = 1,
+    });
+
+    // reset timer count
+    TIM3.EGR.modify(.{
+        .UG = 1,
+    });
+
+    // allow timer allow automatic counter reload
+    TIM3.CR1.modify(.{
+        .UDIS = 0,
+    });
+
+    // resume timer
+    TIM3.ARR = maxTimARR;
+
     return deltaTime;
+}
+
+/// get float time in seconds since start or previous mili()/seconds() call
+pub fn seconds() f32 {
+    return @as(f32, @floatFromInt(mili())) / 1000.0;
 }

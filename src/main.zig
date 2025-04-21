@@ -3,6 +3,7 @@ const microzig = @import("microzig");
 const LedMatrix = @import("subsystems/matrix.zig");
 const Screen: type = @import("subsystems/screen.zig");
 const Joystick: type = @import("subsystems/joystick.zig");
+const deltaTime = @import("subsystems/deltaTime.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
@@ -10,6 +11,7 @@ const RCC = microzig.chip.peripherals.RCC;
 const MenuDisp = @import("subsystems/menudisp.zig");
 const zigApps = @import("apps/index.zig").zigApps;
 
+// NOTE: Temp
 const testApp = @import("apps/testApp.zig");
 
 const TestSR = LedMatrix.SrChain(8, .Div4);
@@ -35,6 +37,8 @@ pub const apps = zigApps ++ cImport.cApps;
 pub fn main() void {
     ChipInit.internal_clock();
     LedMatrix.init(.Div4);
+    deltaTime.init();
+    
     // NOTE: TEMP
     testApp.update();
 

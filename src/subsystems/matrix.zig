@@ -19,6 +19,11 @@ const GPIOB = peripherals.GPIOB;
 const GPIOC = peripherals.GPIOC;
 const TIM2 = peripherals.TIM2;
 
+// Frame buffers for rendering
+var frameBuff1: FrameBuffer = .{};
+var frameBuff2: FrameBuffer = .{};
+var drawBuff: *FrameBuffer = &frameBuff1; // buffer that isn't currently being rendered
+
 pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
     DMA2.IFCR.modify(.{
         // NOTE: Same bug here. Gotta use 3 instead of 4 cuz microzig has 0
@@ -261,10 +266,6 @@ pub const FrameBuffer = extern struct {
     }
 };
 
-var frameBuff1: FrameBuffer = .{};
-var frameBuff2: FrameBuffer = .{};
-var drawBuff: *FrameBuffer = &frameBuff1;
-
 pub fn clearFrame(color: Led) void {
     for (0..8) |x| {
         for (0..8) |y| {
@@ -275,7 +276,7 @@ pub fn clearFrame(color: Led) void {
     }
 }
 
-pub fn setPixel(x: u32, y: u32, z: u32, color: Color) void {
+pub fn setPixel(x: u32, y: u32, z: u32, color: Led) void {
     drawBuff.set_pixel(x, y, z, color);
 }
 
