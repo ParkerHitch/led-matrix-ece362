@@ -21,10 +21,10 @@ pub fn Color(color: ColorEnum) matrix.Led {
     return returnColor;
 }
 
-/// Zig only draw functions
+/// Zig ONLY draw functions
 /// NOTE: temp function implementation
 pub fn box(px: i32, py: i32, pz: i32, w: i32, l: i32, h: i32, color: matrix.Led) void {
-    var x: i32 = px;
+    var x = px;
     while (x < px + w) {
         var y = py;
         while (y < py + l) {

@@ -14,4 +14,5 @@ pub export fn clearFrame(color: u16) void {
 
 comptime {
     @export(matrix.render, .{ .name = "matrixRender", .linkage = .strong });
+    @export(deltaTime.timestamp, .{ .name = "dtTimestamp", .linkage = .strong });
 }
