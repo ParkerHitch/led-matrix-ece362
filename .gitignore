@@ -1,4 +1,11 @@
 
+# zig build stuff
 .zig-cache/
 zig-out/
-build.zig
+
+# clangd stuff
+compile_commands.json
+.cache/
+
+# editor stuff
+.vscode/
