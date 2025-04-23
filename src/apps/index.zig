@@ -7,6 +7,7 @@ pub const zigApps = [_]*const Application{
     &@import("axisApp.zig").app,
     &@import("tesseract.zig").app,
     &@import("dvdApp.zig").app,
+    &@import("fireworks.zig").app,
 };
 
 // comptime {
