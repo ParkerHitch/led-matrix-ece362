@@ -3,6 +3,7 @@ const microzig = @import("microzig");
 const LedMatrix = @import("subsystems/matrix.zig");
 const Screen: type = @import("subsystems/screen.zig");
 const Joystick: type = @import("subsystems/joystick.zig");
+const deltaTime = @import("subsystems/deltaTime.zig");
 const Button: type = @import("subsystems/button.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
@@ -11,9 +12,6 @@ const RCC = microzig.chip.peripherals.RCC;
 const UartDebug = @import("util/uartDebug.zig");
 const zigApps = @import("apps/index.zig").zigApps;
 const buildMode = @import("builtin").mode;
-
-const TestSR = LedMatrix.SrChain(8, .Div4);
-
 const ChipInit = @import("init/general.zig");
 
 // Make sure everything gets exported
@@ -34,10 +32,17 @@ pub const apps = zigApps ++ cImport.cApps;
 
 pub fn main() void {
     ChipInit.internal_clock();
+    LedMatrix.init(.Div4);
+    deltaTime.init();
 
     if (buildMode == .Debug) {
         UartDebug.init();
     }
+
+    // NOTE: TEMP
+    const tempAppIdx = 3;
+    const appMain = apps[tempAppIdx].renderFn.?;
+    appMain();
 
     // initializing display
     const MENU = "Select App:";

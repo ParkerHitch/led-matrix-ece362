@@ -21,6 +21,7 @@ pub const cFrameBuffer = cfiles.FrameBuffer;
 pub const cLayerData = cfiles.LayerData;
 
 pub const Application = cfiles.Application;
+pub const DeltaTime = cfiles.DeltaTime;
 
 pub const cApps: [cAppNames.len]*Application = genExtern: {
     var apps: []const *Application = &.{};
