@@ -8,10 +8,14 @@ const I2C1 = peripherals.I2C1;
 const GPIOA = peripherals.GPIOA;
 const RCC = peripherals.RCC;
 const UartDebug = @import("../util/uartDebug.zig");
+const DeltaTime = @import("deltaTime.zig");
 const fp = @import("../util/fixedPoint.zig");
 
 const AngleFpInt = fp.FixedPoint(16, 16, .signed);
 const AccelFpInt = fp.FixedPoint(8, 24, .signed);
+const AngleVec = fp.FpVector(AngleFpInt);
+const AngleRotor = fp.FpRotor(AngleFpInt);
+const AccelVec = fp.FpVector(AccelFpInt);
 
 // Sample rate for the IMU in Hz.
 // 1k should be divisible by this number
@@ -24,80 +28,65 @@ comptime {
 const ICM_ADDR = 0x69;
 const MAG_ADDR = 0x0c;
 
-const ANGLE_LSB_TO_DPS = AngleFpInt.fromFloatLit(1.0 / 131.0);
+const ANGLE_LSB_TO_DPS = AngleFpInt.fromFloatLit((1.0 / 65.5) * std.math.pi / 180.0);
 const ACCEL_LSB_TO_MpS2 = AccelFpInt.fromFloatLit(9.81 / 16_384.0);
-const TEMP_LSB_TO_DegC = AngleFpInt.fromFloatLit(1.0 / 326.8);
+const TEMP_LSB_TO_DegC = AccelFpInt.fromFloatLit(1.0 / 326.8);
 
 // We are starting by representing orientation with euler angles
 // They are applied in the order: yaw, pitch, roll
 // The current angles are the ones required to get from facing "forward" in the world reference frame
 //      to what is currently "forward" for our sensor
-var yaw = AngleFpInt.fromFloatLit(0);
-var pitch = AngleFpInt.fromFloatLit(0);
-var roll = AngleFpInt.fromFloatLit(0);
+var orientation: AngleRotor = AngleRotor.identity();
+var dt = DeltaTime.DeltaTime{};
 
-// TODO:
-// Can we make this malloc? Yes.
-var fifoBuffer = [_]u8{0} ** 1008;
+// Instantaneous values
+var accel = AccelVec.zero();
+var gyro = AngleVec.zero();
+var temp = AccelFpInt.fromFloatLit(0);
 
-pub fn update() void {
+/// Reads in new instantaneous values.
+/// These can be accessed by getAccel() and getGyro()
+/// Note that either this OR updateOrientation should be called, not both.
+pub fn updateInstantaneousVals() void {
 
     // 6 2 byte vals
-    // + temp
-    const BYTES_PER_READING = 8 * 2;
+    // + temp (2 bytes)
+    const BYTES_PER_READING = (6 * 2) + 2;
 
-    const num_bytes = readU16(0x72);
-    _ = num_bytes;
-    // UartDebug.printIfDebug("{} bytes in fifo\n", .{num_bytes}) catch {};
-    // const num_readings = num_bytes / BYTES_PER_READING;
-    const num_readings: i32 = 1;
-    if (num_readings == 0)
-        return;
+    var readingData: [BYTES_PER_READING]u8 = undefined;
+    burstReadICM(0x3B, &readingData);
 
-    var rawBurst: []u8 = fifoBuffer[0..(BYTES_PER_READING * num_readings)];
-    // burstReadICM(0x74, rawBurst);
-    burstReadICM(0x3B, rawBurst);
+    accel.x = ACCEL_LSB_TO_MpS2.mul(asI16(readingData[0..2]));
+    accel.y = ACCEL_LSB_TO_MpS2.mul(asI16(readingData[2..4]));
+    accel.z = ACCEL_LSB_TO_MpS2.mul(asI16(readingData[4..6]));
+    temp = TEMP_LSB_TO_DegC.mul(asI16(readingData[6..8])).add(25);
+    gyro.x = ANGLE_LSB_TO_DPS.mul(asI16(readingData[8..10]));
+    gyro.y = ANGLE_LSB_TO_DPS.mul(asI16(readingData[10..12]));
+    gyro.z = ANGLE_LSB_TO_DPS.mul(asI16(readingData[12..14]));
+}
 
-    var a_x_sum = AccelFpInt{ .raw = 0 };
-    var a_y_sum = AccelFpInt{ .raw = 0 };
-    var a_z_sum = AccelFpInt{ .raw = 0 };
-    var temp_sum = AngleFpInt{ .raw = 0 };
-    var g_x_sum = AngleFpInt{ .raw = 0 };
-    var g_y_sum = AngleFpInt{ .raw = 0 };
-    var g_z_sum = AngleFpInt{ .raw = 0 };
+/// Updates both instantaneous values and orientation.
+/// They can be accessed via getAccel(), getGyro(), and getOrientation()
+/// This calls updateInstantaneousVals(), so do not call both
+pub fn updateOrientation() void {
+    updateInstantaneousVals();
+    const milis = dt.milli();
+    const sec = (AngleFpInt{ .fp = .{ .integer = @intCast(milis), .fraction = 0 } }).div(1000);
 
-    for (0..num_readings) |i| {
-        const readingData = rawBurst[BYTES_PER_READING * i ..][0..BYTES_PER_READING];
+    // Quaternion derivative stuff
+    // See: https://ahrs.readthedocs.io/en/latest/filters/angular.html#main-content
+    // And: https://jacquesheunis.com/post/rotors/#how-do-i-turn-a-quaternion-into-an-equivalent-3d-rotor
+    const deltaOrientation = (AngleRotor{
+        .scalar = gyro.x.mul(-1).mul(orientation.yz).sub(gyro.y.mul(orientation.zx)).sub(gyro.z.mul(orientation.xy)),
+        .yz = gyro.x.mul(orientation.scalar).add(gyro.z.mul(orientation.zx)).sub(gyro.y.mul(orientation.xy)),
+        .zx = gyro.y.mul(orientation.scalar).sub(gyro.z.mul(orientation.yz)).add(gyro.x.mul(orientation.xy)),
+        .xy = gyro.z.mul(orientation.scalar).add(gyro.y.mul(orientation.yz)).sub(gyro.x.mul(orientation.zx)),
+    }).mul(sec.div(2));
 
-        const a_x = ACCEL_LSB_TO_MpS2.mulRaw(asI16(readingData[0..2]));
-        const a_y = ACCEL_LSB_TO_MpS2.mulRaw(asI16(readingData[2..4]));
-        const a_z = ACCEL_LSB_TO_MpS2.mulRaw(asI16(readingData[4..6]));
-        var temp = TEMP_LSB_TO_DegC.mulRaw(asI16(readingData[6..8]));
-        temp.fp.integer += 25;
-        const g_x = ANGLE_LSB_TO_DPS.mulRaw(asI16(readingData[8..10]));
-        const g_y = ANGLE_LSB_TO_DPS.mulRaw(asI16(readingData[10..12]));
-        const g_z = ANGLE_LSB_TO_DPS.mulRaw(asI16(readingData[13..15]));
+    const predictedOrientation = orientation.add(deltaOrientation);
+    orientation = predictedOrientation.norm();
 
-        a_x_sum = a_x_sum.add(a_x);
-        a_y_sum = a_y_sum.add(a_y);
-        a_z_sum = a_z_sum.add(a_z);
-        temp_sum = temp_sum.add(temp);
-        g_x_sum = g_x_sum.add(g_x);
-        g_y_sum = g_y_sum.add(g_y);
-        g_z_sum = g_z_sum.add(g_z);
-
-        // UartDebug.printIfDebug("Data {}:\n", .{i}) catch {};
-        // UartDebug.printIfDebug("  a_x: {}\n  a_y: {}\n  a_z: {}\n", .{ a_x.fp.integer, a_y.fp.integer, a_z.fp.integer }) catch {};
-        // UartDebug.printIfDebug("  g_x: {}\n  g_y: {}\n  g_z: {}\n", .{ g_x.fp.integer, g_y.fp.integer, g_z.fp.integer }) catch {};
-    }
-    const a_x = a_x_sum.divRaw(num_readings);
-    const a_y = a_y_sum.divRaw(num_readings);
-    const a_z = a_z_sum.divRaw(num_readings);
-    const temp = temp_sum.divRaw(num_readings);
-    const g_x = g_x_sum.divRaw(num_readings);
-    const g_y = g_y_sum.divRaw(num_readings);
-    const g_z = g_z_sum.divRaw(num_readings);
-    UartDebug.printIfDebug("a_x:{: >3}  a_y:{: >3}  a_z:{: >3} t:{: >3} g_x:{: >3}  g_y:{: >3}  g_z:{: >3}\n", .{ a_x.fp.integer, a_y.fp.integer, a_z.fp.integer, temp.fp.integer, g_x.fp.integer, g_y.fp.integer, g_z.fp.integer }) catch {};
+    orientation.prettyPrint(UartDebug.writer, 5) catch {};
 }
 
 pub fn init() void {
@@ -189,8 +178,8 @@ pub fn resetICM() void {
     const smplrt_div: u8 = (1000 / SAMPLE_RATE) - 1;
     // DLPF set to 5 hz
     const config: u8 = 6;
-    // defaults. Minimum full scale + no dlpf bypass
-    const gyro_config: u8 = 0;
+    // 500 dps max + no dlpf bypass
+    const gyro_config: u8 = 0b01 << 3;
     // defaults. Minimum full scale
     const accel_config: u8 = 0;
     // LPF to 5.1 Hz, start with averaging just 4
@@ -206,24 +195,19 @@ pub fn resetICM() void {
         gyro_lp_cfg,
     });
 
-    UartDebug.printIfDebug("0x19: {}\n", .{readICM(0x19)}) catch {};
-    UartDebug.printIfDebug("0x1A: {}\n", .{readICM(0x1A)}) catch {};
-    UartDebug.printIfDebug("0x1B: {}\n", .{readICM(0x1B)}) catch {};
-    UartDebug.printIfDebug("0x1C: {}\n", .{readICM(0x1C)}) catch {};
-    UartDebug.printIfDebug("0x1D: {}\n", .{readICM(0x1D)}) catch {};
-    UartDebug.printIfDebug("0x1E: {}\n", .{readICM(0x1E)}) catch {};
-
     // Turn of motherfucking sleep mode (hours spent)
     // Keep clock on best tho
-    // // Also turn off temp
-    // writeICM(0x6B, 1 | (1 << 3));
     writeICM(0x6B, 1);
-    // Enable Fifo for accel and gyro
-    writeICM(0x23, 0b11 << 3);
-    // Enable global Fifo setting
-    writeICM(0x6a, 1 << 6);
+    // // Enable Fifo for accel and gyro
+    // writeICM(0x23, 0b11 << 3);
+    // // Enable global Fifo setting
+    // writeICM(0x6a, 1 << 6);
     // Turn off output limiting
     writeICM(0x69, 1 << 1);
+
+    dt.start();
+
+    UartDebug.printIfDebug("ICM reset complete!\n", .{}) catch {};
 }
 
 pub fn readICM(addr: u8) u8 {

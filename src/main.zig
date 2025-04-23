@@ -1,5 +1,6 @@
 const std = @import("std");
 const microzig = @import("microzig");
+const IMU = @import("subsystems/imu.zig");
 const LedMatrix = @import("subsystems/matrix.zig");
 const Screen: type = @import("subsystems/screen.zig");
 const Joystick: type = @import("subsystems/joystick.zig");
@@ -32,17 +33,18 @@ pub const apps = zigApps ++ cImport.cApps;
 
 pub fn main() void {
     ChipInit.internal_clock();
-    LedMatrix.init(.Div4);
-    deltaTime.init();
-
     if (buildMode == .Debug) {
         UartDebug.init();
     }
 
+    LedMatrix.init(.Div4);
+    deltaTime.init();
+    IMU.init();
+
     // NOTE: TEMP
-    const tempAppIdx = 3;
-    const appMain = apps[tempAppIdx].renderFn.?;
-    appMain();
+    // const tempAppIdx = 0;
+    // const appMain = apps[tempAppIdx].renderFn.?;
+    // appMain();
 
     // initializing display
     const MENU = "Select App:";
@@ -52,9 +54,8 @@ pub fn main() void {
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
-    UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
-
     while (true) {
+        IMU.updateOrientation();
         Joystick.joystick_update();
 
         if (RUNNING_APP == 1) {
@@ -74,6 +75,6 @@ pub fn main() void {
                 Screen.move_down();
             }
         }
-        cImport.nano_wait(3333333);
+        cImport.nano_wait(33_333_333);
     }
 }

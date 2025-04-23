@@ -39,7 +39,6 @@ pub fn timestamp() callconv(.C) u32 {
 }
 
 pub const DeltaTime = struct {
-    startTime: u32 = 0,
     currTime: u32 = 0,
 
     /// must be called before the .mili method to give a reference starting time
@@ -49,13 +48,13 @@ pub const DeltaTime = struct {
 
     /// returns the time in milliseconds since start or last milli call
     pub fn milli(self: *DeltaTime) u32 {
-        self.startTime = self.currTime;
+        const startTime = self.currTime;
         self.currTime = @bitCast(TIM3.CNT);
 
-        if (self.startTime < self.currTime) {
-            return self.currTime - self.startTime;
-        } else if (self.startTime > self.currTime) {
-            return maxTimARR - self.startTime + self.currTime;
+        if (startTime < self.currTime) {
+            return self.currTime - startTime;
+        } else if (startTime > self.currTime) {
+            return maxTimARR - startTime + self.currTime;
         } else {
             // WARN: realllly scuffed
             cImport.nano_wait(3000000); // wait a couple milli seconds
