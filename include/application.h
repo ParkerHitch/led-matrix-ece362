@@ -51,7 +51,7 @@ typedef struct {
 #define BLUE 0b100
 #define GREEN 0b010
 #define RED 0b001
-#define TIEL 0b110
+#define TEAL 0b110
 #define PURPLE 0b101
 #define YELLOW 0b011
 #define WHITE 0b111
@@ -61,4 +61,5 @@ extern void setPixel(int32_t x, int32_t y, int32_t z, uint16_t color);
 extern void clearFrame(uint16_t color);
 extern void matrixRender();
 extern void dtStart(DeltaTime* dt);
-extern unsigned int dtMilli(DeltaTime* dt);
+extern uint32_t dtMilli(DeltaTime* dt);
+extern uint32_t timestamp();

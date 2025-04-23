@@ -10,6 +10,7 @@ const maxTimARR: u32 = 0x0000ffff;
 const clkPrescale: u32 = 48000 - 1;
 
 /// set's up TIM3 as internal timer
+/// should only be called once in program's execution
 pub fn init() void {
     // enable TIM3 clock source
     RCC.APB1ENR.modify(.{
@@ -28,6 +29,13 @@ pub fn init() void {
     TIM3.CR1.modify(.{
         .CEN = 1,
     });
+}
+
+/// get the dt sources timestamp in miliseconds from the time init() is called
+/// WARN: this timestamp resets to 0 every ~65.5 seconds,
+/// so do not use for long term time measurnments. Best used for a random seed.
+pub fn timestamp() callconv(.C) u32 {
+    return @bitCast(TIM3.CNT);
 }
 
 pub const DeltaTime = struct {

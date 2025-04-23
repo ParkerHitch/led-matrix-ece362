@@ -59,7 +59,7 @@ pub fn button_pressed() bool {
 pub fn moved_up() bool {
     if (prev_y_zeroed and voltVec[1] > 3500) {
         y_zeroed = false;
-        dty.milli();
+        dty.start();
         return true;
     }
     return false;
@@ -68,7 +68,7 @@ pub fn moved_up() bool {
 pub fn moved_down() bool {
     if (prev_y_zeroed and voltVec[1] < 500) {
         y_zeroed = false;
-        dty.milli();
+        dty.start();
         return true;
     }
     return false;
@@ -77,7 +77,7 @@ pub fn moved_down() bool {
 pub fn moved_right() bool {
     if (prev_x_zeroed and voltVec[0] > 3500) {
         x_zeroed = false;
-        dtx.milli();
+        dtx.start();
         return true;
     }
     return false;
@@ -86,7 +86,7 @@ pub fn moved_right() bool {
 pub fn moved_left() bool {
     if (prev_x_zeroed and voltVec[0] < 500) {
         x_zeroed = false;
-        dtx.milli();
+        dtx.start();
         return true;
     }
     return false;
