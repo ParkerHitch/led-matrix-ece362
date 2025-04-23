@@ -19,6 +19,11 @@ const GPIOB = peripherals.GPIOB;
 const GPIOC = peripherals.GPIOC;
 const TIM2 = peripherals.TIM2;
 
+// Frame buffers for rendering
+var frameBuff1: FrameBuffer = .{};
+var frameBuff2: FrameBuffer = .{};
+var drawBuff: *FrameBuffer = &frameBuff1; // buffer that isn't currently being rendered
+
 pub export fn IRQ_DMA1_Ch4_7_DMA2_Ch3_5() callconv(.C) void {
     DMA2.IFCR.modify(.{
         // NOTE: Same bug here. Gotta use 3 instead of 4 cuz microzig has 0
@@ -184,7 +189,7 @@ pub const Led = packed struct {
     b: u1,
 };
 
-pub const Color = enum { R, G, B };
+const Color = enum { R, G, B };
 
 pub const LayerData = extern struct {
     layerId: u8,
@@ -195,17 +200,18 @@ pub const FrameBuffer = extern struct {
     layers: [8]LayerData = defaultLayers: {
         var layers: [8]LayerData = .{LayerData{ .layerId = 0 }} ** 8;
         for (0..8) |i| {
-            layers[i].layerId = i;
+            layers[7 - i].layerId = i; // NOTE: hardware inverted z
+
         }
         break :defaultLayers layers;
     },
 
     /// Right-handed coordinates where z is up
-    pub fn set_pixel(self: *FrameBuffer, x: u3, y: u3, z: u3, color: Led) void {
-        const layer: *LayerData = &self.layers[z];
-        const newY: u8 = 7 - y;
-        const offset: u8 = 3 * newY;
-        const row: []u8 = layer.srs[offset..];
+    pub fn set_pixel(self: *FrameBuffer, x: i32, y: i32, z: i32, color: Led) void {
+        const layer: *LayerData = &self.layers[@intCast(z)];
+        const newY: i32 = 7 - y;
+        const offset: i32 = 3 * newY;
+        const row: []u8 = layer.srs[@intCast(offset)..];
         const rawColor: u8 = @intCast(@as(u3, @bitCast(color)));
         switch (x) {
             0 => {
@@ -244,6 +250,7 @@ pub const FrameBuffer = extern struct {
                 row[2] &= ~@as(u8, 0xe0);
                 row[2] |= rawColor << 5;
             },
+            else => {},
         }
     }
 
@@ -259,6 +266,25 @@ pub const FrameBuffer = extern struct {
         return @ptrCast(self);
     }
 };
+
+pub fn clearFrame(color: Led) void {
+    for (0..8) |x| {
+        for (0..8) |y| {
+            for (0..8) |z| {
+                drawBuff.set_pixel(@intCast(x), @intCast(y), @intCast(z), color);
+            }
+        }
+    }
+}
+
+pub fn setPixel(x: i32, y: i32, z: i32, color: Led) void {
+    drawBuff.set_pixel(x, y, z, color);
+}
+
+pub fn render() callconv(.C) void {
+    startShift(drawBuff);
+    drawBuff = if (drawBuff == &frameBuff1) &frameBuff2 else &frameBuff1;
+}
 
 // Way harder to put this inside a test block, as those need to run on the machine, which is the microcontroller
 // Random comptime block works just as well for this memory layout stuff
@@ -276,7 +302,7 @@ comptime {
     var frame: FrameBuffer = .{};
     frame.set_pixel(2, 7, 0, .{ .r = 1, .g = 1, .b = 1 });
     // @compileLog(frame.layers[0].srs);
-    std.debug.assert(frame.layers[0].layerId == 0);
+    std.debug.assert(frame.layers[0].layerId == 7); // NOTE: hardware inverted z
     std.debug.assert(frame.layers[0].srs[0] == 0xC0);
     std.debug.assert(frame.layers[0].srs[1] == 0x01);
 }

@@ -3,7 +3,10 @@ const std = @import("std");
 // const zigAppNames = @import("options").zigApps;
 
 pub const zigApps = [_]*const Application{
-    &@import("basedApp.zig").app,
+    &@import("templateApp.zig").app,
+    &@import("axisApp.zig").app,
+    &@import("tesseract.zig").app,
+    &@import("dvdApp.zig").app,
 };
 
 // comptime {

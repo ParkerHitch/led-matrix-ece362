@@ -28,37 +28,38 @@ typedef void (*RenderFrameFn)(void);
 
 // Your application
 typedef struct {
-    // Function that will be run when your app is started
-    // Setup all peripherals here
-    void (*initFn)(void);
-
-    // Main rendering loop
-    // Will be called periodically according to targetFPS
+    // Application main function
     RenderFrameFn renderFn;
-
-    // Function that will be run when your app stops
-    // Free memory and deinit peripherals here
-    void (*deinitFn)(void);
 
     // Metadata
     const char* name;
     const char* authorfirst;
     const char* authorlast;
-    uint8_t targetFPS;
-    // Optional parameters passed in
-    bool needsAccel;
-    bool needsJoystick;
-    bool needsButton;
 } Application;
+
+// DeltaTime struct
+typedef struct {
+    uint32_t startTime;
+    uint32_t currTime;
+} DeltaTime;
 
 
 
 // ================
 // Helper functions
 // ================
-#define RED 0b100
+#define BLUE 0b100
 #define GREEN 0b010
-#define BLUE 0b001
-extern void set_pixel(FrameBuffer* frame, uint8_t x, uint8_t y, uint8_t z, uint8_t color);
+#define RED 0b001
+#define TEAL 0b110
+#define PURPLE 0b101
+#define YELLOW 0b011
+#define WHITE 0b111
+#define BLACK 0b000
 
-
+extern void setPixel(int32_t x, int32_t y, int32_t z, uint16_t color);
+extern void clearFrame(uint16_t color);
+extern void matrixRender();
+extern void dtStart(DeltaTime* dt);
+extern uint32_t dtMilli(DeltaTime* dt);
+extern uint32_t timestamp();
