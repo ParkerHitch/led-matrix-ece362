@@ -16,7 +16,7 @@
 // so if your file is name myApp.c your Application header struct would be
 // Application myApp = { ...
 // your file name must not be the same as any other app
-void appMain();
+static void appMain();
 
 Application templateApp = {
     .renderFn = &appMain,
@@ -28,7 +28,7 @@ Application templateApp = {
 
 
 // app entry point
-void appMain() {
+static void appMain() {
     // time keeping variable
     DeltaTime dt = (DeltaTime){ .startTime = 0, .currTime = 0 };
     dtStart(&dt);

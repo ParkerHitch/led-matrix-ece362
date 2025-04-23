@@ -11,7 +11,7 @@ pub const app: Application = .{
     .authorlast = "Burns",
 };
 
-pub fn render() callconv(.C) void {
+fn render() callconv(.C) void {
     while (true) {
         matrix.clearFrame(.{ .r = 0, .g = 0, .b = 0 });
 

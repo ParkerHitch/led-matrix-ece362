@@ -30,7 +30,7 @@ pub const app: Application = .{
 };
 
 // app entry point
-pub fn appMain() callconv(.C) void {
+fn appMain() callconv(.C) void {
     // NOTE: for random number generator uncomment the rand include,
     // and use deltaTime.timestamp() as a seed
     // rand.DefaultPrng.init(@intCast(deltaTime.timestamp())); <-- for seeding random
