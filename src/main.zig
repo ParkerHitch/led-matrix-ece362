@@ -40,7 +40,7 @@ pub fn main() void {
     }
 
     // NOTE: TEMP
-    const tempAppIdx = 0;
+    const tempAppIdx = 5;
     const appMain = apps[tempAppIdx].renderFn.?;
     appMain();
 
@@ -49,8 +49,6 @@ pub fn main() void {
     Screen.screen_init();
     Joystick.joystick_init();
     cImport.init_button();
-
-    UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
