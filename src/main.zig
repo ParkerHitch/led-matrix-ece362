@@ -40,7 +40,7 @@ pub fn main() void {
     }
 
     // NOTE: TEMP
-    const tempAppIdx = 3;
+    const tempAppIdx = 5;
     const appMain = apps[tempAppIdx].renderFn.?;
     appMain();
 
