@@ -27,7 +27,7 @@ fn renderFireworks() callconv(.C) void {
     var x_start: i32 = 0;
     var y_start: i32 = 0;
     var state: i32 = 0;
-    var randcolor: i32 = 0;
+    var randcolor: u32 = 0;
 
     // initialize rand
     var prng = std.rand.DefaultPrng.init(1625953);
@@ -39,27 +39,33 @@ fn renderFireworks() callconv(.C) void {
             timeSinceUpdate = 0;
 
             matrix.clearFrame(draw.Color(.BLACK));
+
             switch (state) {
                 0 => {
                     // START
-                    x_start = rand.intRangeAtMost(i32, 3, 6);
-                    y_start = rand.intRangeAtMost(i32, 3, 6);
-                    randcolor = rand.intRangeAtMost(i32, 0, 7);
+                    x_start = rand.intRangeAtMost(i32, 3, 5);
+                    y_start = rand.intRangeAtMost(i32, 3, 5);
+                    randcolor = rand.intRangeAtMost(u32, 0, 6);
                     matrix.setPixel(x_start, y_start, 0, draw.Color(@enumFromInt(randcolor)));
                 },
                 1 => {
+                    matrix.setPixel(x_start, y_start, 0, draw.Color(@enumFromInt(randcolor)));
                     matrix.setPixel(x_start, y_start, 1, draw.Color(@enumFromInt(randcolor)));
                 },
                 2 => {
+                    matrix.setPixel(x_start, y_start, 1, draw.Color(@enumFromInt(randcolor)));
                     matrix.setPixel(x_start, y_start, 2, draw.Color(@enumFromInt(randcolor)));
                 },
                 3 => {
+                    matrix.setPixel(x_start, y_start, 2, draw.Color(@enumFromInt(randcolor)));
                     matrix.setPixel(x_start, y_start, 3, draw.Color(@enumFromInt(randcolor)));
                 },
                 4 => {
+                    matrix.setPixel(x_start, y_start, 3, draw.Color(@enumFromInt(randcolor)));
                     matrix.setPixel(x_start, y_start, 4, draw.Color(@enumFromInt(randcolor)));
                 },
                 5 => {
+                    matrix.setPixel(x_start, y_start, 4, draw.Color(@enumFromInt(randcolor)));
                     matrix.setPixel(x_start, y_start, 5, draw.Color(@enumFromInt(randcolor)));
                 },
                 6 => {
@@ -168,7 +174,9 @@ fn renderFireworks() callconv(.C) void {
                     matrix.setPixel(x_start, y_start, 3, draw.Color(@enumFromInt(randcolor)));
                     matrix.setPixel(x_start, y_start, 7, draw.Color(@enumFromInt(randcolor)));
                 },
-                else => {},
+                else => {
+                    matrix.clearFrame(draw.Color(.RED));
+                },
             }
             matrix.render();
 
@@ -180,7 +188,5 @@ fn renderFireworks() callconv(.C) void {
             }
             // matrix.setPixel(FrameBuffer* frame, uint8_t x, uint8_t y, uint8_t z, uint8_t color);
         }
-
-        return;
     }
 }
