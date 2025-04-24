@@ -19,6 +19,9 @@ const GPIOB = peripherals.GPIOB;
 const GPIOC = peripherals.GPIOC;
 const TIM2 = peripherals.TIM2;
 
+pub const upperBound: comptime_int = 7;
+pub const lowerBound: comptime_int = 0;
+
 // Frame buffers for rendering
 var frameBuff1: FrameBuffer = .{};
 var frameBuff2: FrameBuffer = .{};

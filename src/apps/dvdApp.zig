@@ -27,7 +27,7 @@ fn appMain() callconv(.C) void {
     const matrixLowerBound: f32 = 0;
     const matrixUpperBound: f32 = 7;
 
-    var dvd = draw.Box.initCube(Vec3f.init(0, 0, 0), 1, draw.Color(.WHITE));
+    var dvd = draw.Box.initCube(Vec3f.init(0, 0, 0), 4, draw.Color(.WHITE));
     var dvdVel = Vec3f.init(0.16, 0.08, 0.1);
     // var dvdVel = Vec3f.init() // units per millsecond
     // var dvd = draw.Box.initBox(Vec3.init(0, 0, 0), 3, 2, 1, draw.Color(.WHITE));
