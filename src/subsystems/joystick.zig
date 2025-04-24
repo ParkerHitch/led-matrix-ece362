@@ -27,9 +27,7 @@ pub fn joystick_update() void {
     prev_button_pressed = cur_button_pressed;
     cur_button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_2) != 0;
     prev_y_zeroed = y_zeroed;
-    y_zeroed = (voltVec[1] > 1600 and voltVec[1] < 2400);
     prev_x_zeroed = x_zeroed;
-    x_zeroed = (voltVec[0] > 1600 and voltVec[0] < 2400);
 
     if (!x_zeroed) {
         x_time_held += dtx.milli();
@@ -38,17 +36,17 @@ pub fn joystick_update() void {
             x_time_held = 0;
         }
     } else {
-        x_time_held = 251;
+        x_time_held = 0;
     }
 
     if (!y_zeroed) {
         y_time_held += dty.milli();
-        if (y_time_held > 251) {
+        if (y_time_held > 250) {
             y_zeroed = true;
             y_time_held = 0;
         }
     } else {
-        y_time_held = 251;
+        y_time_held = 0;
     }
 }
 
