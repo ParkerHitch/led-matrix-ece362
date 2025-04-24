@@ -3,7 +3,7 @@
 const matrix = @import("matrix.zig");
 const Vec3f = @import("vec3.zig").Vec3f;
 
-pub const ColorEnum = enum { RED, GREEN, BLUE, YELLOW, PURPLE, TIEL, WHITE, BLACK };
+pub const ColorEnum = enum { RED, GREEN, BLUE, YELLOW, PURPLE, TEAL, WHITE, BLACK };
 
 /// Returns the corrisponding renderable color struct for functions
 /// like matrix.setPixel() and matrix.clearFrame()
@@ -14,7 +14,7 @@ pub fn Color(color: ColorEnum) matrix.Led {
         .BLUE => matrix.Led{ .r = 0, .g = 0, .b = 1 },
         .YELLOW => matrix.Led{ .r = 1, .g = 1, .b = 0 },
         .PURPLE => matrix.Led{ .r = 1, .g = 0, .b = 1 },
-        .TIEL => matrix.Led{ .r = 0, .g = 1, .b = 1 },
+        .TEAL => matrix.Led{ .r = 0, .g = 1, .b = 1 },
         .WHITE => matrix.Led{ .r = 1, .g = 1, .b = 1 },
         .BLACK => matrix.Led{ .r = 0, .g = 0, .b = 0 },
     };
