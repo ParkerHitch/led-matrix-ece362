@@ -33,22 +33,22 @@ pub fn joystick_update() void {
 
     if (!x_zeroed) {
         x_time_held += dtx.milli();
-        if (x_time_held > 500) {
+        if (x_time_held > 250) {
             x_zeroed = true;
             x_time_held = 0;
         }
     } else {
-        x_time_held = 0;
+        x_time_held = 251;
     }
 
     if (!y_zeroed) {
         y_time_held += dty.milli();
-        if (y_time_held > 500) {
+        if (y_time_held > 251) {
             y_zeroed = true;
             y_time_held = 0;
         }
     } else {
-        y_time_held = 0;
+        y_time_held = 251;
     }
 }
 

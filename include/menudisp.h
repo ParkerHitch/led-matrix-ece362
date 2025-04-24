@@ -3,12 +3,12 @@
 #include "application.h"
 #include <stdint.h>
 // #include <stdio.h>
-#define WHITE       0xFFFF
-#define BLACK       0x0000
-#define LIGHTBLUE   0X7D7C
-#define LIGHTGRAY   0XEF5B
-#define LGRAY       0XC618
-#define GRAY        0X8430
+#define SCREEN_WHITE 0xFFFF
+#define SCREEN_BLACK 0x0000
+#define LIGHTBLUE 0X7D7C
+#define LIGHTGRAY 0XEF5B
+#define LGRAY 0XC618
+#define GRAY 0X8430
 // #define MAXAPPS 10 // read the name
 
 

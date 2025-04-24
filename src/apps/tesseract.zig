@@ -7,7 +7,7 @@ const draw = @import("../subsystems/draw.zig");
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "Template Zig App",
+    .name = "Tesseract",
     .authorfirst = "John",
     .authorlast = "Burns",
 };

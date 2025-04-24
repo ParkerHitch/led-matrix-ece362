@@ -64,9 +64,6 @@ fn appMain() callconv(.C) void {
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
 
-            // put your app logic here
-            drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
-
             // movment update
             xPos += xVel;
 
@@ -74,9 +71,11 @@ fn appMain() callconv(.C) void {
             if (xPos > matrixUpperBound) {
                 xPos = matrixUpperBound;
                 xVel *= -1;
+                drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
             } else if (xPos < matrixLowerBound) {
                 xPos = matrixLowerBound;
                 xVel *= -1;
+                drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
             }
 
             // draw to the display

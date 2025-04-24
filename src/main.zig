@@ -40,9 +40,9 @@ pub fn main() void {
     }
 
     // NOTE: TEMP
-    const tempAppIdx = 5;
-    const appMain = apps[tempAppIdx].renderFn.?;
-    appMain();
+    // const tempAppIdx = 6;
+    // const appMain = apps[tempAppIdx].renderFn.?;
+    // appMain();
 
     // initializing display
     const MENU = "Select App:";
@@ -63,6 +63,8 @@ pub fn main() void {
         } else {
             if (Joystick.button_pressed()) {
                 cImport.cMenuDisp.jump_to_app(@ptrCast(apps[@intCast(APP_NUM)]));
+                const appMain = apps[@intCast(APP_NUM)].renderFn.?;
+                appMain();
                 continue;
             }
             if (Joystick.moved_up()) {

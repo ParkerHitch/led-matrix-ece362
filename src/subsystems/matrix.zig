@@ -153,6 +153,9 @@ pub fn init(sysclock_divisor: periph_types.spi_v2.BR) void {
 
     // Enable interrupt
     // cmsis.NVIC_EnableIRQ(cmsis.DMA1_Ch4_7_DMA2_Ch3_5_IRQn);
+
+    clearFrame(.{ .r = 0, .g = 0, .b = 0 });
+    render();
 }
 
 /// Begins an async shift opperation.

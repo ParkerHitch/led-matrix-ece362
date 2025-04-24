@@ -30,7 +30,7 @@ fn renderFireworks() callconv(.C) void {
     var randcolor: u32 = 0;
 
     // initialize rand
-    var prng = std.rand.DefaultPrng.init(1625953);
+    var prng = std.rand.DefaultPrng.init(@intCast(deltaTime.timestamp()));
     const rand = prng.random();
 
     while (true) {

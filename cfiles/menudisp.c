@@ -311,6 +311,12 @@ void LCD_Init(void (*reset)(int), void (*select)(int), void (*reg_select)(int))
     LCD_WR_DATA(0x48);
     LCD_WR_REG(0x3A);
     LCD_WR_DATA(0x55);
+    LCD_WR_REG(0x53);    // Backlight Control
+    LCD_WR_DATA(0x24);
+    LCD_WR_REG(0x51);    // Brightness Control
+    LCD_WR_DATA(0xFF);
+    LCD_WR_REG(0xBF);    // BL EN
+    LCD_WR_DATA(0x04);
     LCD_WR_REG(0xB1);
     LCD_WR_DATA(0x00);
     LCD_WR_DATA(0x1B);   // 1A
@@ -567,14 +573,14 @@ void jump_to_app(const Application* app)
     RUNNING_APP = 1;
     char* by = "By:";
     char* back = "Back";
-    LCD_Clear(WHITE);
+    LCD_Clear(SCREEN_WHITE);
     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
-    LCD_DrawString(209, 5, WHITE, LIGHTBLUE, app->name, 26); // menu text
-    LCD_DrawString(173, 5, BLACK, WHITE, by, 26);
-    LCD_DrawString(173, 53, BLACK, WHITE, app->authorfirst, 26);
-    LCD_DrawString(145, 53, BLACK, WHITE, app->authorlast, 26);
-    LCD_DrawString(5, 21, BLACK, WHITE, back, 26);
-    LCD_DrawChar(5, 5, BLACK, WHITE, 62, 26);
+    LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, app->name, 26); // menu text
+    LCD_DrawString(173, 5, SCREEN_BLACK, SCREEN_WHITE, by, 26);
+    LCD_DrawString(173, 53, SCREEN_BLACK, SCREEN_WHITE, app->authorfirst, 26);
+    LCD_DrawString(145, 53, SCREEN_BLACK, SCREEN_WHITE, app->authorlast, 26);
+    LCD_DrawString(5, 21, SCREEN_BLACK, SCREEN_WHITE, back, 26);
+    LCD_DrawChar(5, 5, SCREEN_BLACK, SCREEN_WHITE, 62, 26);
 }
 
 // Reloads the "Select App:" menu
@@ -583,13 +589,13 @@ void reload_menu(const char* MENU, const Application* const* APPLIST)
     RUNNING_APP = 0;
     int find_start = APP_NUM - (APP_NUM % 7);
     // SETS UP STARTING SCREEN
-    LCD_Clear(WHITE);
+    LCD_Clear(SCREEN_WHITE);
     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
-    LCD_DrawString(209, 5, WHITE, LIGHTBLUE, MENU, 26); // menu text
+    LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, MENU, 26); // menu text
     // loads correct 7 applications
     for (int i = find_start; i < (find_start + 7); i++)
     {
-        LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
+        LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
         if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
         {
             i = APP_NUM + 7;
@@ -604,14 +610,14 @@ void shift_screen(int dir, const Application* const* APPLIST)
     // 0 = down, 1 = up
     // LCD_Clear(0xffff);
     // LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE);
-    // LCD_DrawString(209, 5, WHITE, LIGHTBLUE, MENU, 26);
-    LCD_DrawFillRectangle(0, 0, 203, 320, WHITE); // loads white box for apps
+    // LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, MENU, 26);
+    LCD_DrawFillRectangle(0, 0, 203, 320, SCREEN_WHITE); // loads white box for apps
     if (dir)
     {
         // loads apps when changing screen upward
         for (int i = APP_NUM; i > (APP_NUM - 7); i--)
         {
-            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
+            LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
             if ((i % 7) == 0) // ends loading when reaching top of last bit of apps
             {
                 i = APP_NUM - 7;
@@ -623,7 +629,7 @@ void shift_screen(int dir, const Application* const* APPLIST)
         // loads apps when changing screens down
         for (int i = APP_NUM; i < (APP_NUM + 7); i++)
         {
-            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
+            LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
             if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
             {
                 i = APP_NUM + 7;
@@ -636,8 +642,8 @@ void shift_screen(int dir, const Application* const* APPLIST)
 void update_display()
 {
     int change_amnt = APP_NUM % MAXAPPS; // for % of scroll bar calculations
-    LCD_DrawFillRectangle(0, 0, 201, 21, WHITE);
-    LCD_DrawChar(173 - (28 * (APP_NUM % 7)), 5, BLACK, WHITE, 62, 26); // each "line" for text is 28 pixels apart with max of 7 apps per line
+    LCD_DrawFillRectangle(0, 0, 201, 21, SCREEN_WHITE);
+    LCD_DrawChar(173 - (28 * (APP_NUM % 7)), 5, SCREEN_BLACK, SCREEN_WHITE, 62, 26); // each "line" for text is 28 pixels apart with max of 7 apps per line
     LCD_DrawFillRectangle(0, 310, 203, 320, GRAY);
     LCD_DrawFillRectangle(203 - (203 * (change_amnt + 1) / MAXAPPS), 310, 203 - (203 * change_amnt / MAXAPPS), 320, LIGHTGRAY); //percentage calcs for filling scroll bar
 }
@@ -659,17 +665,17 @@ void update_display()
 //     APPLIST[8] = "you";
 //     APPLIST[9] = "down.";
 //     // SETS UP STARTING SCREEN
-//     LCD_Clear(WHITE);
+//     LCD_Clear(SCREEN_WHITE);
 //     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
-//     LCD_DrawString(209, 5, WHITE, LIGHTBLUE, MENU, 26); // menu text
+//     LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, MENU, 26); // menu text
 //     // loads first 7 applications
 //     for (int i = 0; i < 7; i++)
 //     {
-//         LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i], 26);
+//         LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i], 26);
 //     }
 //     // loads arrow
-//     LCD_DrawFillRectangle(0, 0, 201, 21, WHITE);
-//     LCD_DrawChar(173, 5, BLACK, WHITE, 62, 26);
+//     LCD_DrawFillRectangle(0, 0, 201, 21, SCREEN_WHITE);
+//     LCD_DrawChar(173, 5, SCREEN_BLACK, SCREEN_WHITE, 62, 26);
 //     // loads scroll bar
 //     LCD_DrawFillRectangle(0, 310, 203, 320, GRAY);
 //     LCD_DrawFillRectangle(174, 310, 203, 320, LIGHTGRAY);
