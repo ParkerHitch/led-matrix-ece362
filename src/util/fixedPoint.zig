@@ -69,7 +69,7 @@ pub fn FixedPoint(integer_size: comptime_int, fraction_size: comptime_int, signd
                 return .{ .raw = a.raw * b };
             } else if (b_type_info == .Union and @hasField(b_type, "fp") and @hasDecl(b_type, "fraction_bits")) {
                 // Mul with another, arbitrary fixed point number
-                return .{ .raw = (a.raw * b.raw) >> b_type.fraction_bits };
+                return .{ .raw = (a.raw >> b_type.fraction_bits / 2) * (b.raw >> b_type.fraction_bits / 2) };
             } else {
                 @compileError("Called FixedPoint.mul with unsopported second operand type. Please use a raw integer or another FixedPoint number");
             }
@@ -80,7 +80,10 @@ pub fn FixedPoint(integer_size: comptime_int, fraction_size: comptime_int, signd
             const b_type_info: std.builtin.Type = @typeInfo(b_type);
 
             if (b_type == This) {
-                const out: This = .{ .raw = @divFloor(a.raw << (fraction_size / 2), b.raw >> (fraction_size / 2)) };
+                var tempBig: i64 = a.raw;
+                tempBig = tempBig << fraction_size;
+                tempBig = @divTrunc(tempBig, b.raw);
+                const out: This = .{ .raw = @intCast(tempBig) };
                 return out;
             } else if (b_type_info == .Int or b_type == comptime_int) {
                 // Div with raw int
@@ -89,6 +92,15 @@ pub fn FixedPoint(integer_size: comptime_int, fraction_size: comptime_int, signd
                 @compileError("Not implemented yet");
             } else {
                 @compileError("Called FixedPoint.div with unsopported second operand type. Please use a raw integer or another FixedPoint number");
+            }
+        }
+
+        pub fn toFp(self: This, OtherFp: type) OtherFp {
+            const shift_amt = OtherFp.fraction_bits - This.fraction_bits;
+            if (shift_amt >= 0) {
+                return .{ .raw = self.raw << shift_amt };
+            } else {
+                return .{ .raw = self.raw >> -shift_amt };
             }
         }
 
@@ -171,6 +183,16 @@ pub fn FpVector(scalarType: type) type {
                 .z = .{ .raw = 0 },
             };
         }
+
+        pub fn prettyPrint(self: This, writer: anytype, decimals: comptime_int) !void {
+            try writer.print("Vector. x: ", .{});
+            try self.x.prettyPrint(writer, decimals);
+            try writer.print(" y: ", .{});
+            try self.y.prettyPrint(writer, decimals);
+            try writer.print(" z: ", .{});
+            try self.z.prettyPrint(writer, decimals);
+            try writer.print("\n", .{});
+        }
     };
 }
 
@@ -221,6 +243,50 @@ pub fn FpRotor(scalarType: type) type {
                 .yz = a.yz.div(mag),
                 .zx = a.zx.div(mag),
                 .xy = a.xy.div(mag),
+            };
+        }
+
+        pub fn mulRotor(a: This, b: anytype) This {
+            return .{
+                .scalar = a.scalar.mul(b.scalar).sub(a.yz.mul(b.yz)).sub(a.zx.mul(b.zx)).sub(a.xy.mul(b.xy)),
+                .yz = a.scalar.mul(b.yz).add(a.yz.mul(b.scalar)).add(a.zx.mul(b.xy)).sub(a.xy.mul(b.zx)),
+                .zx = a.scalar.mul(b.zx).sub(a.yz.mul(b.xy)).add(a.zx.mul(b.scalar)).add(a.xy.mul(b.yz)),
+                .xy = a.scalar.mul(b.xy).add(a.yz.mul(b.zx)).sub(a.zx.mul(b.yz)).add(a.xy.mul(b.scalar)),
+            };
+        }
+
+        pub fn rotateVector(a: This, b: anytype) @TypeOf(b) {
+            return .{
+                .x = b.x.mul(
+                    a.scalar.mul(a.scalar).add(a.yz.mul(a.yz)).sub(a.zx.mul(a.zx)).sub(a.xy.mul(a.xy)),
+                ).add(
+                    b.y.mul(a.yz.mul(a.zx).sub(a.scalar.mul(a.xy)).mul(2)),
+                ).add(
+                    b.z.mul(a.yz.mul(a.xy).add(a.scalar.mul(a.zx)).mul(2)),
+                ),
+                .y = b.x.mul(
+                    a.yz.mul(a.zx).add(a.scalar.mul(a.xy)).mul(2),
+                ).add(
+                    b.y.mul(a.scalar.mul(a.scalar).sub(a.yz.mul(a.yz)).add(a.zx.mul(a.zx)).sub(a.xy.mul(a.xy))),
+                ).add(
+                    b.z.mul(a.zx.mul(a.xy).sub(a.scalar.mul(a.yz)).mul(2)),
+                ),
+                .z = b.x.mul(
+                    a.yz.mul(a.xy).sub(a.scalar.mul(a.zx)).mul(2),
+                ).add(
+                    b.y.mul(a.scalar.mul(a.yz).add(a.zx.mul(a.xy)).mul(2)),
+                ).add(
+                    b.z.mul(a.scalar.mul(a.scalar).sub(a.yz.mul(a.yz)).sub(a.zx.mul(a.zx)).add(a.xy.mul(a.xy))),
+                ),
+            };
+        }
+
+        pub fn conjugate(a: This) This {
+            return .{
+                .scalar = a.scalar,
+                .yz = a.yz.mul(-1),
+                .zx = a.zx.mul(-1),
+                .xy = a.xy.mul(-1),
             };
         }
 

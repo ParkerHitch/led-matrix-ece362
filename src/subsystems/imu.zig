@@ -29,7 +29,8 @@ const ICM_ADDR = 0x69;
 const MAG_ADDR = 0x0c;
 
 const ANGLE_LSB_TO_DPS = AngleFpInt.fromFloatLit((1.0 / 65.5) * std.math.pi / 180.0);
-const ACCEL_LSB_TO_MpS2 = AccelFpInt.fromFloatLit(9.81 / 16_384.0);
+// const ACCEL_LSB_TO_MpS2 = AccelFpInt.fromFloatLit(9.81 / 16_384.0);
+const ACCEL_LSB_TO_G = AccelFpInt.fromFloatLit(1.0 / 16_384.0);
 const TEMP_LSB_TO_DegC = AccelFpInt.fromFloatLit(1.0 / 326.8);
 
 // We are starting by representing orientation with euler angles
@@ -38,6 +39,9 @@ const TEMP_LSB_TO_DegC = AccelFpInt.fromFloatLit(1.0 / 326.8);
 //      to what is currently "forward" for our sensor
 var orientation: AngleRotor = AngleRotor.identity();
 var dt = DeltaTime.DeltaTime{};
+
+// Higher = more correction from gravity
+const alpha = AngleFpInt.fromFloatLit(0.1);
 
 // Instantaneous values
 var accel = AccelVec.zero();
@@ -56,9 +60,9 @@ pub fn updateInstantaneousVals() void {
     var readingData: [BYTES_PER_READING]u8 = undefined;
     burstReadICM(0x3B, &readingData);
 
-    accel.x = ACCEL_LSB_TO_MpS2.mul(asI16(readingData[0..2]));
-    accel.y = ACCEL_LSB_TO_MpS2.mul(asI16(readingData[2..4]));
-    accel.z = ACCEL_LSB_TO_MpS2.mul(asI16(readingData[4..6]));
+    accel.x = ACCEL_LSB_TO_G.mul(asI16(readingData[0..2])).mul(-1);
+    accel.y = ACCEL_LSB_TO_G.mul(asI16(readingData[2..4]));
+    accel.z = ACCEL_LSB_TO_G.mul(asI16(readingData[4..6])).mul(-1);
     temp = TEMP_LSB_TO_DegC.mul(asI16(readingData[6..8])).add(25);
     gyro.x = ANGLE_LSB_TO_DPS.mul(asI16(readingData[8..10]));
     gyro.y = ANGLE_LSB_TO_DPS.mul(asI16(readingData[10..12]));
@@ -83,8 +87,32 @@ pub fn updateOrientation() void {
         .xy = gyro.z.mul(orientation.scalar).add(gyro.y.mul(orientation.yz)).sub(gyro.x.mul(orientation.zx)),
     }).mul(sec.div(2));
 
-    const predictedOrientation = orientation.add(deltaOrientation);
-    orientation = predictedOrientation.norm();
+    const predictedOrientation = orientation.add(deltaOrientation).norm();
+    orientation = predictedOrientation;
+
+    // Predicted gravity
+    const predGrav = predictedOrientation.conjugate().rotateVector(accel);
+
+    const one = comptime AngleFpInt.fromFloatLit(1);
+    // accel.prettyPrint(UartDebug.writer, 5) catch {};
+    var accelCorrection = if (predGrav.z.fp.integer < 0) AngleRotor{
+        .scalar = predGrav.y.toFp(AngleFpInt).div(one.sub(predGrav.z).mul(2).sqrt() catch unreachable).mul(-1),
+        .yz = (one.sub(predGrav.z).div(2).sqrt() catch unreachable).toFp(AngleFpInt),
+        .zx = .{ .raw = 0 },
+        .xy = predGrav.x.toFp(AngleFpInt).div(one.sub(predGrav.z).mul(2).sqrt() catch unreachable),
+    } else AngleRotor{
+        .scalar = (predGrav.z.add(1).div(2).sqrt() catch unreachable).toFp(AngleFpInt),
+        .yz = predGrav.y.div(predGrav.z.add(1).mul(2).sqrt() catch unreachable).mul(-1).toFp(AngleFpInt),
+        .zx = predGrav.x.div(predGrav.z.add(1).mul(2).sqrt() catch unreachable).toFp(AngleFpInt),
+        .xy = .{ .raw = 0 },
+    };
+    // accelCorrection.prettyPrint(UartDebug.writer, 5) catch {};
+    // Lerp accel correction by alpha
+    accelCorrection = accelCorrection.mul(alpha);
+    accelCorrection.scalar = accelCorrection.scalar.add(one.sub(alpha));
+    accelCorrection = accelCorrection.norm();
+
+    orientation = predictedOrientation.mulRotor(accelCorrection).norm();
 
     orientation.prettyPrint(UartDebug.writer, 5) catch {};
 }
