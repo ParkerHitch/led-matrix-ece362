@@ -13,8 +13,6 @@ pub const cmsis = @cImport({
     // This is ok, since microzig provides a _start that initializes .bss and .data for us
     //    (https://github.com/ZigEmbeddedGroup/microzig/blob/bb91614c5a288afd297d5e96ea4fe4d98b5bfba4/core/src/cpus/cortex_m.zig#L251)
     // Really important that this works tho since we are using globals with defined values
-    @cDefine("DSTM32F0", {});
-    @cDefine("DSTM32F091XC", {});
     @cDefine("__PROGRAM_START", {});
     @cInclude("stm32f091xc.h");
 });
@@ -39,9 +37,7 @@ pub extern fn nano_wait(ns: c_uint) void;
 pub extern fn LCD_Setup() void;
 
 pub extern fn setup_adc(outVecVar: *[2]u32) void;
-pub extern fn init_button_a() void;
-pub extern fn init_button_b() void;
-pub extern fn init_debounce() void;
+pub extern fn init_button() void;
 
 // Proper interoperability assertions
 comptime {

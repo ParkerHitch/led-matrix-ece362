@@ -14,7 +14,6 @@ var dtx: deltaT.DeltaTime = .{};
 var dty: deltaT.DeltaTime = .{};
 var x_time_held: u32 = 0;
 var y_time_held: u32 = 0;
-pub var memory_byte: u8 = 0;
 
 var voltVec = [2]u32{ 0, 0 };
 

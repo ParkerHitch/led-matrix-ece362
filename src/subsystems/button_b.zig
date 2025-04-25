@@ -5,13 +5,12 @@ const apps = @import("../main.zig").apps;
 
 var prev_reg_button_pressed = false;
 var cur_reg_button_pressed = false;
-pub var memory_byte: u8 = 0;
 
-pub fn update() void {
+pub fn button_update() void {
     prev_reg_button_pressed = cur_reg_button_pressed;
     cur_reg_button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_3) != 0;
 }
 
-pub fn pressed() bool {
+pub fn button_pressed() bool {
     return (cur_reg_button_pressed and !prev_reg_button_pressed);
 }
