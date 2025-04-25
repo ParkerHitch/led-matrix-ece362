@@ -52,13 +52,13 @@ const Cursor = struct {
                     return hasMoved;
                 }
             },
-            .LEFT => {
+            .RIGHT => {
                 if (self.x < matrix.upperBound) {
                     self.x += 1;
                     return hasMoved;
                 }
             },
-            .RIGHT => {
+            .LEFT => {
                 if (self.x > matrix.lowerBound) {
                     self.x -= 1;
                     return hasMoved;
@@ -125,11 +125,11 @@ fn appMain() callconv(.C) void {
                 cursor.color = draw.Color(.RED);
             }
         } else if (buttonA.pressed()) {
-            if (!cursor.move(.UP)) {
+            if (!cursor.move(.DOWN)) {
                 cursor.color = draw.Color(.RED);
             }
         } else if (buttonB.pressed()) {
-            if (!cursor.move(.DOWN)) {
+            if (!cursor.move(.UP)) {
                 cursor.color = draw.Color(.RED);
             }
         }
