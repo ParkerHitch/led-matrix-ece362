@@ -3,6 +3,7 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
+const joystick = @import("../subsystems/joystick.zig");
 
 // NOTE: matrix.setPixel and matrix.clearFrame are the only 2
 // basic matrix pixel set functions. All future drawing abstractions
@@ -26,9 +27,10 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 15; // i.e. target fps or update rate
+    const tickRate: u32 = 9; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
+    var appRunning = true;
 
     // collision consts
     const boxMaxSize = 8;
@@ -42,10 +44,13 @@ fn appMain() callconv(.C) void {
     var y_idx: i32 = 1;
     var z_idx: i32 = 1;
 
-    while (true) {
+    while (appRunning) {
         // NOTE: There are other ways to use dt for keeping track of render time.
         // This method will lock your update logic to the framerate of the display,
         // and limit the framefrate to a max value determined by tickRate
+        joystick.joystick_update();
+        appRunning = !joystick.button_pressed();
+
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
