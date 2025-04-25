@@ -120,7 +120,7 @@ fn appMain() callconv(.C) void {
             if (!cursor.move(.LEFT)) {
                 cursor.color = draw.Color(.RED);
             }
-        } else if (joystick.moved_righ()) {
+        } else if (joystick.moved_right()) {
             if (!cursor.move(.RIGHT)) {
                 cursor.color = draw.Color(.RED);
             }
