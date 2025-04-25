@@ -6,6 +6,7 @@ const Joystick: type = @import("subsystems/joystick.zig");
 const deltaTime = @import("subsystems/deltaTime.zig");
 const Button_A: type = @import("subsystems/button_a.zig");
 const Button_B = @import("subsystems/button_b.zig");
+const Debounce = @import("init/debounce.zig");
 const Draw = @import("subsystems/draw.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
@@ -19,11 +20,13 @@ const ChipInit = @import("init/general.zig");
 // Make sure everything gets exported
 comptime {
     _ = @import("cExport.zig");
+    _ = @import("init/debounce.zig");
 }
 
 pub const microzig_options = .{
     .interrupts = .{
         .DMA1_Ch4_7_DMA2_Ch3_5 = microzig.interrupt.Handler{ .C = LedMatrix.IRQ_DMA1_Ch4_7_DMA2_Ch3_5 },
+        .TIM14 = microzig.interrupt.Handler{ .C = Debounce.TIM14_IRQHandler },
     },
 };
 
@@ -50,7 +53,9 @@ pub fn main() void {
     const MENU = "Select App:";
     Screen.screen_init();
     Joystick.joystick_init();
-    cImport.init_button();
+    cImport.init_button_a();
+    cImport.init_button_b();
+    cImport.init_debounce();
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 

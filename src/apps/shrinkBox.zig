@@ -27,7 +27,7 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 15; // i.e. target fps or update rate
+    const tickRate: u32 = 9; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
     var appRunning = true;
@@ -97,6 +97,4 @@ fn appMain() callconv(.C) void {
             matrix.render();
         }
     }
-    matrix.clearFrame(draw.Color(.BLACK));
-    matrix.render();
 }

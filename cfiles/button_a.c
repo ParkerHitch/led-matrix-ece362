@@ -2,7 +2,7 @@
 #include "stm32f091xc.h"
 #include <stdint.h>
 
-void init_button() {
+void init_button_a() {
     RCC->APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN;
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
     GPIOC->MODER &= ~GPIO_MODER_MODER4;
