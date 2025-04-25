@@ -4,7 +4,9 @@ const LedMatrix = @import("subsystems/matrix.zig");
 const Screen: type = @import("subsystems/screen.zig");
 const Joystick: type = @import("subsystems/joystick.zig");
 const deltaTime = @import("subsystems/deltaTime.zig");
-const Button: type = @import("subsystems/button.zig");
+const Button_A: type = @import("subsystems/button_a.zig");
+const Button_B = @import("subsystems/button_b.zig");
+const Draw = @import("subsystems/draw.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
 const peripherals = microzig.chip.peripherals;
@@ -65,6 +67,9 @@ pub fn main() void {
                 cImport.cMenuDisp.jump_to_app(@ptrCast(apps[@intCast(APP_NUM)]));
                 const appMain = apps[@intCast(APP_NUM)].renderFn.?;
                 appMain();
+                cImport.cMenuDisp.reload_menu(MENU, @ptrCast(&apps));
+                LedMatrix.clearFrame(Draw.Color(.BLACK));
+                LedMatrix.render();
                 continue;
             }
             if (Joystick.moved_up()) {

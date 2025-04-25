@@ -7,6 +7,7 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
+const joystick = @import("../subsystems/joystick.zig");
 // const rand = std.Random; // <-- uncomment for random lib
 //
 // const test = rand.DefaultPrng;
@@ -44,6 +45,9 @@ fn appMain() callconv(.C) void {
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
+    // loop control variable
+    var appRunning = true;
+
     // collision consts
     const matrixLowerBound: i32 = 0;
     const matrixUpperBound: i32 = 7;
@@ -56,7 +60,11 @@ fn appMain() callconv(.C) void {
     var xPos: i32 = 0;
 
     // TODO: replace true in while true with joystick press exit condition
-    while (true) {
+    while (appRunning) {
+
+        // checking for exit condition
+        joystick.joystick_update();
+        appRunning = !joystick.button_pressed();
         // NOTE: There are other ways to use dt for keeping track of render time.
         // This method will lock your update logic to the framerate of the display,
         // and limit the framefrate to a max value determined by tickRate
