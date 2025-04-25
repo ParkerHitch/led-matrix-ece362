@@ -45,8 +45,8 @@ fn appMain() callconv(.C) void {
     var timeSinceUpdate: u32 = 0;
 
     // collision consts
-    const matrixLowerBound: i32 = 0;
-    const matrixUpperBound: i32 = 7;
+    // matrix.upperBound;
+    // matrix.lowerBound;
 
     // variable for keeping track the color to draw
     var drawIdx: u32 = 0;
@@ -68,12 +68,12 @@ fn appMain() callconv(.C) void {
             xPos += xVel;
 
             // collision detection & resolution
-            if (xPos > matrixUpperBound) {
-                xPos = matrixUpperBound;
+            if (xPos > matrix.upperBound) {
+                xPos = matrix.upperBound;
                 xVel *= -1;
                 drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
-            } else if (xPos < matrixLowerBound) {
-                xPos = matrixLowerBound;
+            } else if (xPos < matrix.lowerBound) {
+                xPos = matrix.lowerBound;
                 xVel *= -1;
                 drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
             }
