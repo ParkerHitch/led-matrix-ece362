@@ -14,9 +14,21 @@ var dtx: deltaT.DeltaTime = .{};
 var dty: deltaT.DeltaTime = .{};
 var x_time_held: u32 = 0;
 var y_time_held: u32 = 0;
-pub var memory_byte: u8 = 0;
+var cur_left = false;
+var cur_right = false;
+var cur_up = false;
+var cur_down = false;
 
-var voltVec = [2]u32{ 0, 0 };
+pub const JoystickDirEnum = enum { BUTTON, LEFT, RIGHT, UP, DOWN };
+
+// TODO: implement similar memory byte handling to button a / b, however make an enum and case statement for direction
+var button_memory_byte: u8 = 0;
+var left_memory_byte: u8 = 0;
+var right_memory_byte: u8 = 0;
+var up_memory_byte: u8 = 0;
+var down_memory_byte: u8 = 0;
+
+pub var voltVec = [2]u32{ 0, 0 };
 
 pub fn joystick_init() void {
     cImport.setup_adc(&voltVec);
@@ -25,8 +37,12 @@ pub fn joystick_init() void {
 }
 
 pub fn joystick_update() void {
+    button_memory_byte = 0;
+    left_memory_byte = 0;
+    right_memory_byte = 0;
+    up_memory_byte = 0;
+    down_memory_byte = 0;
     prev_button_pressed = cur_button_pressed;
-    cur_button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_2) != 0;
     prev_y_zeroed = y_zeroed;
     prev_x_zeroed = x_zeroed;
 
@@ -89,4 +105,47 @@ pub fn moved_left() bool {
         return true;
     }
     return false;
+}
+
+// memory byte handling
+pub fn memory_byte_full(dir: JoystickDirEnum) bool {
+    const returnValue = switch (dir) {
+        .BUTTON => button_memory_byte == 0xFF,
+        .LEFT => left_memory_byte == 0xFF,
+        .RIGHT => right_memory_byte == 0xFF,
+        .UP => up_memory_byte == 0xFF,
+        .DOWN => down_memory_byte == 0xFF,
+    };
+
+    return returnValue;
+}
+
+pub fn memory_byte_shift_one(dir: JoystickDirEnum) void {
+    switch (dir) {
+        .BUTTON => button_memory_byte = (button_memory_byte << 1) + 1,
+        .LEFT => left_memory_byte = (left_memory_byte << 1) + 1,
+        .RIGHT => right_memory_byte = (right_memory_byte << 1) + 1,
+        .UP => up_memory_byte = (up_memory_byte << 1) + 1,
+        .DOWN => down_memory_byte = (down_memory_byte << 1) + 1,
+    }
+}
+
+pub fn memory_byte_shift_zero(dir: JoystickDirEnum) void {
+    switch (dir) {
+        .BUTTON => button_memory_byte = (button_memory_byte << 1),
+        .LEFT => left_memory_byte = (left_memory_byte << 1),
+        .RIGHT => right_memory_byte = (right_memory_byte << 1),
+        .UP => up_memory_byte = (up_memory_byte << 1),
+        .DOWN => down_memory_byte = (down_memory_byte << 1),
+    }
+}
+
+pub fn update_cur_value(dir: JoystickDirEnum) void {
+    switch (dir) {
+        .BUTTON => cur_button_pressed = true,
+        .LEFT => cur_left = true,
+        .RIGHT => cur_right = true,
+        .UP => cur_up = true,
+        .DOWN => cur_down = true,
+    }
 }

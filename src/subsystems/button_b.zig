@@ -3,15 +3,34 @@ const std = @import("std");
 const cImport = @import("../cImport.zig");
 const apps = @import("../main.zig").apps;
 
-var prev_reg_button_pressed = false;
-var cur_reg_button_pressed = false;
-pub var memory_byte: u8 = 0;
-
-pub fn update() void {
-    prev_reg_button_pressed = cur_reg_button_pressed;
-    cur_reg_button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_3) != 0;
-}
+var prev_pressed = false;
+var cur_pressed = false;
+var memory_byte: u8 = 0;
 
 pub fn pressed() bool {
-    return (cur_reg_button_pressed and !prev_reg_button_pressed);
+    const dummy_cur = cur_pressed;
+    const dummy_prev = prev_pressed;
+
+    if (memory_byte != 0xFF) {
+        cur_pressed = false;
+    }
+    prev_pressed = cur_pressed;
+
+    return (dummy_cur and !dummy_prev);
+}
+
+pub fn memory_byte_full() bool {
+    return (memory_byte == 0xFF);
+}
+
+pub fn memory_byte_shift_one() void {
+    memory_byte = (memory_byte << 1) + 1;
+}
+
+pub fn memory_byte_shift_zero() void {
+    memory_byte = (memory_byte << 1);
+}
+
+pub fn update_pressed() void {
+    cur_pressed = true;
 }
