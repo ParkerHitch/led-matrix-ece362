@@ -1,7 +1,7 @@
 const Application = @import("../cImport.zig").Application;
 const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
-const rand = std.Random;
+const Random = std.Random;
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
 const joystick = @import("../subsystems/joystick.zig");
@@ -9,12 +9,12 @@ const buttonA = @import("../subsystems/button_a.zig");
 const buttonB = @import("../subsystems/button_b.zig");
 const Vec3 = @import("../subsystems/vec3.zig").Vec3;
 
-const maxSnakeSize = 256;
+const maxSnakeSize = 256; // NOTE: win condition is to reach max snake size
 
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "Cursor",
+    .name = "3D Snake",
     .authorfirst = "John",
     .authorlast = "Burns",
 };
@@ -23,7 +23,85 @@ const AppState = struct {
     updatePeriod: u32,
     timeSinceUpdate: u32 = 0,
     appRunning: bool = true,
+    gameState: GameState = .PLAY,
 };
+
+fn appMain() callconv(.C) void {
+    var dt: deltaTime.DeltaTime = .{};
+    dt.start();
+
+    var prng = Random.DefaultPrng.init(@intCast(deltaTime.timestamp()));
+    const rand = prng.random();
+
+    var state: AppState = .{
+        .updatePeriod = 1000 / 4,
+    };
+
+    var snake: Snake = .{};
+    snake.body[snake.headIdx] = randVec3(&rand);
+
+    var pellot: Vec3 = newPellotPos(&rand, &snake);
+
+    while (state.appRunning) {
+        state.timeSinceUpdate += dt.milli();
+        if (state.timeSinceUpdate < state.updatePeriod) {
+            continue;
+        }
+        matrix.clearFrame(draw.Color(.BLACK));
+        state.timeSinceUpdate = 0;
+
+        // user input handling
+        joystick.joystick_update();
+        state.appRunning = !joystick.button_pressed();
+
+        if (joystick.moved_up() and snake.headDir != .BACK) {
+            snake.headDir = .FOWARD;
+        } else if (joystick.moved_down() and snake.headDir != .FOWARD) {
+            snake.headDir = .BACK;
+        } else if (joystick.moved_right() and snake.headDir != .LEFT) {
+            snake.headDir = .RIGHT;
+        } else if (joystick.moved_left() and snake.headDir != .RIGHT) {
+            snake.headDir = .LEFT;
+        } else if (buttonA.pressed() and snake.headDir != .UP) {
+            snake.headDir = .DOWN;
+        } else if (buttonB.pressed() and snake.headDir != .DOWN) {
+            snake.headDir = .UP;
+        }
+
+        switch (state.gameState) {
+            .PLAY => {
+                // movement system
+                snake.move();
+
+                // collision system
+                if (snake.headOutOfBounds() or snake.bodyCollision(snake.body[snake.headIdx])) {
+                    state.gameState = .LOSS;
+                    continue; // fucking galaxy brain moment
+                } else if (std.meta.eql(snake.body[snake.headIdx], pellot)) {
+                    snake.grow();
+                    pellot = newPellotPos(&rand, &snake);
+                    if (snake.len >= maxSnakeSize) {
+                        state.gameState = .WIN;
+                        continue; // fucking galaxy brain moment
+                    }
+                }
+
+                // draw to the display
+                snake.drawSnake();
+                matrix.setPixel(pellot.x, pellot.y, pellot.z, draw.Color(.RED));
+            },
+            .WIN => {
+                matrix.clearFrame(draw.Color(.GREEN));
+            },
+            .LOSS => {
+                matrix.clearFrame(draw.Color(.RED));
+            },
+        }
+
+
+        matrix.render();
+    }
+}
 
 const MoveDirection = enum {
     UP,
@@ -32,23 +110,24 @@ const MoveDirection = enum {
     RIGHT,
     FOWARD,
     BACK,
+    NONE,
 };
 
 const GameState = enum {
+    PLAY,
     WIN,
     LOSS,
-    PLAY,
 };
 
 const Snake = struct {
     body: [maxSnakeSize]Vec3 = [_]Vec3{.{}} ** maxSnakeSize,
     headIdx: u32 = 0,
     len: u32 = 1,
-    headDir: MoveDirection = .FOWARD,
+    headDir: MoveDirection = .NONE,
 
     fn move(self: *Snake) void {
         const prevHeadIdx = self.headIdx;
-        self.headIdx = if (self.headIdx == 0) maxSnakeSize else self.headIdx - 1;
+        self.headIdx = if (self.headIdx == 0) maxSnakeSize - 1 else self.headIdx - 1;
 
         switch (self.headDir) {
             .UP => {
@@ -69,11 +148,44 @@ const Snake = struct {
             .BACK => {
                 self.body[self.headIdx].y = self.body[prevHeadIdx].y - 1;
             },
+            .NONE => {
+                self.body[self.headIdx] = self.body[prevHeadIdx]; // Init state
+            }
         }
     }
 
     fn grow(self: *Snake) void {
         self.len += 1;
+    }
+
+    fn headOutOfBounds(self: *Snake) bool {
+        const headPos = self.body[self.headIdx];
+
+        // WARN: AVERT YOUR EYES LESS THEY BE BLINDED!
+        return
+            headPos.x > matrix.upperBound or
+            headPos.x < matrix.lowerBound or
+            headPos.y > matrix.upperBound or
+            headPos.y < matrix.lowerBound or
+            headPos.z > matrix.upperBound or
+            headPos.z < matrix.lowerBound;
+    }
+
+    /// NOTE: doesn't check for head collision
+    fn bodyCollision(self: *Snake, pos: Vec3) bool {
+        var isCollision: bool = false;
+        var idx = (self.headIdx + 1) % maxSnakeSize;
+        const end = (self.headIdx + self.len) % maxSnakeSize; // WARN: idx of the tail node after the tail
+
+        while (idx != end) {
+            if (std.meta.eql(self.body[idx], pos)) {
+                isCollision = true;
+                break;
+            }
+            idx = (idx + 1) % maxSnakeSize;
+        }
+
+        return isCollision;
     }
 
     fn drawSnake(self: *Snake) void {
@@ -88,50 +200,24 @@ const Snake = struct {
     }
 };
 
-fn appMain() callconv(.C) void {
-    var dt: deltaTime.DeltaTime = .{};
-    dt.start();
+/// randVec3 in range 0 to 7 for xyz
+fn randVec3(rand: *const Random) Vec3 {
+    return Vec3.init(
+        rand.intRangeAtMost(i32, 0, 7),
+        rand.intRangeAtMost(i32, 0, 7),
+        rand.intRangeAtMost(i32, 0, 7),
+    );
+}
 
-    var state: AppState = .{
-        .updatePeriod = 1000 / 30,
-    };
-    var snake: Snake = .{};
+/// returns position within marix bounds that doesn't overlap with the snake
+fn newPellotPos(rand: *const Random, snake: *Snake) Vec3 {
+    var newPos: Vec3 = undefined;
+    var isSpawnConflict = true;
 
-    while (state.appRunning) {
-        state.timeSinceUpdate += dt.milli();
-        if (state.timeSinceUpdate < state.updatePeriod) {
-            continue;
-        }
-
-        joystick.joystick_update();
-        state.timeSinceUpdate = 0;
-        state.appRunning = !joystick.button_pressed();
-
-        // user input handling
-        if (joystick.moved_up()) {
-            snake.headDir = .FOWARD;
-        } else if (joystick.moved_down()) {
-            snake.headDir = .BACK;
-        } else if (joystick.moved_right()) {
-            snake.headDir = .RIGHT;
-        } else if (joystick.moved_left()) {
-            snake.headDir = .LEFT;
-        } else if (buttonA.pressed()) {
-            snake.headDir = .DOWN;
-        } else if (buttonB.pressed()) {
-            snake.headDir = .UP;
-        }
-
-        // movment update
-        snake.move();
-
-        // collision detection
-
-        // draw to the display
-        matrix.clearFrame(draw.Color(.BLACK));
-
-        snake.drawSnake();
-
-        matrix.render();
+    while (isSpawnConflict) {
+        newPos = randVec3(rand);
+        isSpawnConflict = snake.bodyCollision(newPos) or std.meta.eql(snake.body[snake.headIdx], newPos);
     }
+
+    return newPos;
 }
