@@ -19,13 +19,6 @@ pub const app: Application = .{
     .authorlast = "Burns",
 };
 
-const AppState = struct {
-    updatePeriod: u32,
-    timeSinceUpdate: u32 = 0,
-    appRunning: bool = true,
-    gameState: GameState = .PLAY,
-};
-
 fn appMain() callconv(.C) void {
     var dt: deltaTime.DeltaTime = .{};
     dt.start();
@@ -33,13 +26,9 @@ fn appMain() callconv(.C) void {
     var prng = Random.DefaultPrng.init(@intCast(deltaTime.timestamp()));
     const rand = prng.random();
 
-    var state: AppState = .{
-        .updatePeriod = 1000 / 4,
-    };
-
+    var state: AppState = .{ .updatePeriod = 1000 / 4 };
     var snake: Snake = .{};
     snake.body[snake.headIdx] = randVec3(&rand);
-
     var pellot: Vec3 = newPellotPos(&rand, &snake);
 
     while (state.appRunning) {
@@ -102,6 +91,13 @@ fn appMain() callconv(.C) void {
         matrix.render();
     }
 }
+
+const AppState = struct {
+    updatePeriod: u32,
+    timeSinceUpdate: u32 = 0,
+    appRunning: bool = true,
+    gameState: GameState = .PLAY,
+};
 
 const MoveDirection = enum {
     UP,
