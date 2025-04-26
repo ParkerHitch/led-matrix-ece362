@@ -1,48 +1,137 @@
 const Application = @import("../cImport.zig").Application;
 const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
+const rand = std.Random;
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
-const rand = std.Random;
+const joystick = @import("../subsystems/joystick.zig");
+const buttonA = @import("../subsystems/button_a.zig");
+const buttonB = @import("../subsystems/button_b.zig");
+const Vec3 = @import("../subsystems/vec3.zig").Vec3;
+
+const maxSnakeSize = 256;
 
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "3D Snake",
+    .name = "Cursor",
     .authorfirst = "John",
     .authorlast = "Burns",
 };
 
-const appState = struct {
-    updateTime: u32,
+const AppState = struct {
+    updatePeriod: u32,
     timeSinceUpdate: u32 = 0,
+    appRunning: bool = true,
+};
+
+const MoveDirection = enum {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    FOWARD,
+    BACK,
+};
+
+const GameState = enum {
+    WIN,
+    LOSS,
+    PLAY,
+};
+
+const Snake = struct {
+    body: [maxSnakeSize]Vec3 = [_]Vec3{.{}} ** maxSnakeSize,
+    headIdx: u32 = 0,
+    len: u32 = 1,
+    headDir: MoveDirection = .FOWARD,
+
+    fn move(self: *Snake) void {
+        const prevHeadIdx = self.headIdx;
+        self.headIdx = if (self.headIdx == 0) maxSnakeSize else self.headIdx - 1;
+
+        switch (self.headDir) {
+            .UP => {
+                self.body[self.headIdx].z = self.body[prevHeadIdx].z + 1;
+            },
+            .DOWN => {
+                self.body[self.headIdx].z = self.body[prevHeadIdx].z - 1;
+            },
+            .RIGHT => {
+                self.body[self.headIdx].x = self.body[prevHeadIdx].x + 1;
+            },
+            .LEFT => {
+                self.body[self.headIdx].x = self.body[prevHeadIdx].x - 1;
+            },
+            .FOWARD => {
+                self.body[self.headIdx].y = self.body[prevHeadIdx].y + 1;
+            },
+            .BACK => {
+                self.body[self.headIdx].y = self.body[prevHeadIdx].y - 1;
+            },
+        }
+    }
+
+    fn grow(self: *Snake) void {
+        self.len += 1;
+    }
+
+    fn drawSnake(self: *Snake) void {
+        var idx = self.headIdx;
+        const end = (self.headIdx + self.len) % maxSnakeSize; // WARN: not the idx of the tail
+
+        while (idx != end) {
+            const currNode = self.body[idx];
+            matrix.setPixel(currNode.x, currNode.y, currNode.z, draw.Color(.GREEN));
+            idx = (idx + 1) % maxSnakeSize;
+        }
+    }
 };
 
 fn appMain() callconv(.C) void {
     var dt: deltaTime.DeltaTime = .{};
     dt.start();
 
-    const tickRate: u32 = 24; // i.e. target fps or update rate
-    const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
-    var timeSinceUpdate: u32 = 0;
+    var state: AppState = .{
+        .updatePeriod = 1000 / 30,
+    };
+    var snake: Snake = .{};
 
-    // variable for keeping track the color to draw
-
-    // TODO: replace true in while true with joystick press exit condition
-    while (true) {
-        // NOTE: There are other ways to use dt for keeping track of render time.
-        // This method will lock your update logic to the framerate of the display,
-        // and limit the framefrate to a max value determined by tickRate
-        timeSinceUpdate += dt.milli();
-        if (timeSinceUpdate >= updateTime) {
-            timeSinceUpdate = 0;
-
-            // draw to the display
-            // NOTE: must start with clearing the frame and end with
-            // rendering the frame else the frame before last will remain
-            matrix.clearFrame(draw.Color(.BLACK));
-
-            matrix.render();
+    while (state.appRunning) {
+        state.timeSinceUpdate += dt.milli();
+        if (state.timeSinceUpdate < state.updatePeriod) {
+            continue;
         }
+
+        joystick.joystick_update();
+        state.timeSinceUpdate = 0;
+        state.appRunning = !joystick.button_pressed();
+
+        // user input handling
+        if (joystick.moved_up()) {
+            snake.headDir = .FOWARD;
+        } else if (joystick.moved_down()) {
+            snake.headDir = .BACK;
+        } else if (joystick.moved_right()) {
+            snake.headDir = .RIGHT;
+        } else if (joystick.moved_left()) {
+            snake.headDir = .LEFT;
+        } else if (buttonA.pressed()) {
+            snake.headDir = .DOWN;
+        } else if (buttonB.pressed()) {
+            snake.headDir = .UP;
+        }
+
+        // movment update
+        snake.move();
+
+        // collision detection
+
+        // draw to the display
+        matrix.clearFrame(draw.Color(.BLACK));
+
+        snake.drawSnake();
+
+        matrix.render();
     }
 }
