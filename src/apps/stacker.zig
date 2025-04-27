@@ -238,7 +238,7 @@ fn appMain() callconv(.C) void {
             // only change / show top stack if haven't won or lost
             if (!win and !lose) {
                 // movment update
-                if ((@rem(tickcount, 8) == 0) and !placed) { //(8 - stack.height)
+                if ((@rem(tickcount, (8 - stack.height)) == 0) and !placed) { //(8 - stack.height)
                     stack.LayerArray[@intCast(stack.height)].x += xVel;
                     stack.LayerArray[@intCast(stack.height)].y += yVel;
                 }
