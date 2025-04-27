@@ -130,10 +130,10 @@ fn appMain() callconv(.C) void {
         appRunning = !joystick.button_pressed();
 
         // checking for button press
-        button_pressed = button.pressed();
+        // button_pressed = button.pressed();
 
         // checking for restart press
-        restart_pressed = restart.pressed();
+        // restart_pressed = restart.pressed();
 
         // takes one cycle to place then restart velocity for moving layer
         if (placed) {
@@ -165,7 +165,7 @@ fn appMain() callconv(.C) void {
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
             // logic for stacking when button pressed
-            if (button_pressed) {
+            if (button.pressed()) {
                 tickcount = 0;
                 // switching to moving in y
                 if (xVel != 0) {
@@ -266,7 +266,7 @@ fn appMain() callconv(.C) void {
             // rendering the frame else the frame before last will remain
             DrawStack(stack);
 
-            if (restart_pressed) {
+            if (restart.pressed()) {
                 // resets stack
                 stack = .{};
                 // turns win/loss/change color flags off
