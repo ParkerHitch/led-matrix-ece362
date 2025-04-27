@@ -94,8 +94,8 @@ fn appMain() callconv(.C) void {
 
     // loop control variable
     var appRunning: bool = true;
-    var button_pressed: bool = false;
-    var restart_pressed: bool = false;
+    // var button_pressed: bool = false;
+    // var restart_pressed: bool = false;
 
     // collision consts
     const matrixLowerBound: i32 = 0;
