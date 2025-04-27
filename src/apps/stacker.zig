@@ -130,14 +130,9 @@ fn appMain() callconv(.C) void {
         appRunning = !joystick.button_pressed();
 
         // checking for button press
-        button.update();
         button_pressed = button.pressed();
-        if (tickcount >= 30) {
-            button_pressed = true;
-        }
 
         // checking for restart press
-        restart.update();
         restart_pressed = restart.pressed();
 
         // takes one cycle to place then restart velocity for moving layer
