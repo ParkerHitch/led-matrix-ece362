@@ -88,7 +88,7 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 30; // i.e. target fps or update rate
+    const tickRate: u32 = 50; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
@@ -238,7 +238,7 @@ fn appMain() callconv(.C) void {
             // only change / show top stack if haven't won or lost
             if (!win and !lose) {
                 // movment update
-                if ((@rem(tickcount, (8 - stack.height)) == 0) and !placed) { //(8 - stack.height)
+                if ((@rem(tickcount, (1 + 2 * (8 - stack.height)) == 0)) and !placed) { //(8 - stack.height)
                     stack.LayerArray[@intCast(stack.height)].x += xVel;
                     stack.LayerArray[@intCast(stack.height)].y += yVel;
                 }
