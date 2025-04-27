@@ -12,6 +12,7 @@ pub const zigApps = [_]*const Application{
     &@import("snake.zig").app,
     &@import("cursor.zig").app,
     &@import("waterdrop.zig").app,
+    &@import("stacker.zig").app,
 };
 
 // comptime {

@@ -45,13 +45,14 @@ fn appMain() callconv(.C) void {
     // NOTE: for random number generator uncomment the rand include,
     // and use deltaTime.timestamp() as a seed
     // rand.DefaultPrng.init(@intCast(deltaTime.timestamp())); <-- for seeding random
+    // checking for exit condition
 
     // dt struct is usded for keeping tract of time between frames
     var dt: deltaTime.DeltaTime = .{};
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 5; // i.e. target fps or update rate
+    const tickRate: u32 = 10; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
