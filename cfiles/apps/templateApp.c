@@ -34,7 +34,7 @@ static void appMain() {
     dtStart(&dt);
 
     // time keeping vairiables to limit tickRate5
-    const uint32_t tickRate = 5; // i.e. target fps or update rate 
+    const uint32_t tickRate = 50; // i.e. target fps or update rate 
     const uint32_t updatePeroid = 1000 / tickRate; // 1000 ms * (period of a tick)
     uint32_t dtSinceUpdate = 0;
 

@@ -16,24 +16,24 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
         .UIF = 0,
     });
 
-    // button_a memory byte
-    if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_4) {
-        Button_A.memory_byte = (Button_A.memory_byte << 1) + 1;
-    } else {
-        Button_A.memory_byte = (Button_A.memory_byte << 1);
-    }
+    // // button_a memory byte
+    // if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_4) {
+    //     Button_A.memory_byte = (Button_A.memory_byte << 1) + 1;
+    // } else {
+    //     Button_A.memory_byte = (Button_A.memory_byte << 1);
+    // }
 
-    // button_b memory byte
-    if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_3) {
-        Button_B.memory_byte = (Button_B.memory_byte << 1) + 1;
-    } else {
-        Button_B.memory_byte = (Button_B.memory_byte << 1);
-    }
+    // // button_b memory byte
+    // if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_3) {
+    //     Button_B.memory_byte = (Button_B.memory_byte << 1) + 1;
+    // } else {
+    //     Button_B.memory_byte = (Button_B.memory_byte << 1);
+    // }
 
-    // joystick memory byte
-    if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_4) {
-        Joystick.memory_byte = (Joystick.memory_byte << 1) + 1;
-    } else {
-        Joystick.memory_byte = (Joystick.memory_byte << 1);
-    }
+    // // joystick memory byte
+    // if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_4) {
+    //     Joystick.memory_byte = (Joystick.memory_byte << 1) + 1;
+    // } else {
+    //     Joystick.memory_byte = (Joystick.memory_byte << 1);
+    // }
 }

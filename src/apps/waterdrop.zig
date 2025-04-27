@@ -7,6 +7,7 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
+const joystick = @import("../subsystems/joystick.zig");
 // const rand = std.Random; // <-- uncomment for random lib
 //
 // const test = rand.DefaultPrng;
@@ -44,13 +45,14 @@ fn appMain() callconv(.C) void {
     // NOTE: for random number generator uncomment the rand include,
     // and use deltaTime.timestamp() as a seed
     // rand.DefaultPrng.init(@intCast(deltaTime.timestamp())); <-- for seeding random
+    // checking for exit condition
 
     // dt struct is usded for keeping tract of time between frames
     var dt: deltaTime.DeltaTime = .{};
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 5; // i.e. target fps or update rate
+    const tickRate: u32 = 10; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
@@ -61,12 +63,15 @@ fn appMain() callconv(.C) void {
     var radius: i32 = 0;
     const waterheight: i32 = 1;
 
+    var appRunning = true;
     // initialize rand
     var prng = std.rand.DefaultPrng.init(@intCast(deltaTime.timestamp()));
     const rand = prng.random();
 
     // TODO: replace true in while true with joystick press exit condition
-    while (true) {
+    while (appRunning) {
+        joystick.joystick_update();
+        appRunning = !joystick.button_pressed();
         // NOTE: There are other ways to use dt for keeping track of render time.
         // This method will lock your update logic to the framerate of the display,
         // and limit the framefrate to a max value determined by tickRate

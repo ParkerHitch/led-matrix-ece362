@@ -572,6 +572,8 @@ void jump_to_app(const Application* app)
 {
     RUNNING_APP = 1;
     char* by = "By:";
+    char* instruction1 = "Press joystick";
+    char* instruction2 = "down to go";
     char* back = "Back";
     LCD_Clear(SCREEN_WHITE);
     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
@@ -579,6 +581,8 @@ void jump_to_app(const Application* app)
     LCD_DrawString(173, 5, SCREEN_BLACK, SCREEN_WHITE, by, 26);
     LCD_DrawString(173, 53, SCREEN_BLACK, SCREEN_WHITE, app->authorfirst, 26);
     LCD_DrawString(145, 53, SCREEN_BLACK, SCREEN_WHITE, app->authorlast, 26);
+    LCD_DrawString(61, 21, SCREEN_BLACK, SCREEN_WHITE, instruction1, 26);
+    LCD_DrawString(33, 21, SCREEN_BLACK, SCREEN_WHITE, instruction2, 26);
     LCD_DrawString(5, 21, SCREEN_BLACK, SCREEN_WHITE, back, 26);
     LCD_DrawChar(5, 5, SCREEN_BLACK, SCREEN_WHITE, 62, 26);
 }

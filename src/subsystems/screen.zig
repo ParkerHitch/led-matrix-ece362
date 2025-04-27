@@ -51,7 +51,7 @@ pub fn move_down() void {
         APP_NUM = 0;
         cImport.cMenuDisp.shift_screen(0, @ptrCast(&apps));
     } else if (@mod(APP_NUM, 7) == 0) {
-        cImport.cMenuDisp.shift_screen(1, @ptrCast(&apps));
+        cImport.cMenuDisp.shift_screen(0, @ptrCast(&apps));
     }
     cImport.cMenuDisp.update_display();
 }
