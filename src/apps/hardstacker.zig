@@ -27,7 +27,7 @@ const restart = @import("../subsystems/button_b.zig");
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "Stacker",
+    .name = "Stacker (Hard)",
     .authorfirst = "Richard",
     .authorlast = "Ye",
 };
@@ -88,7 +88,7 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 50; // i.e. target fps or update rate
+    const tickRate: u32 = 30; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
@@ -104,6 +104,7 @@ fn appMain() callconv(.C) void {
     // yz-plane x pos and velocity
     var xVel: i32 = 1; // units per tick
     var yVel: i32 = 0;
+    var speedmod: i32 = 8;
 
     // initializes stack
     var stack: Stack = .{};
@@ -217,6 +218,42 @@ fn appMain() callconv(.C) void {
                                 stack.LayerArray[@intCast(stack.height)].xLen = stack.LayerArray[@intCast(stack.height - 1)].xLen;
                                 stack.LayerArray[@intCast(stack.height)].y = stack.LayerArray[@intCast(stack.height - 1)].y;
                                 stack.LayerArray[@intCast(stack.height)].yLen = stack.LayerArray[@intCast(stack.height - 1)].yLen;
+                                if (stack.height == 2) {
+                                    if (stack.LayerArray[@intCast(stack.height)].xLen >= 4) {
+                                        stack.LayerArray[@intCast(stack.height)].xLen -= 1;
+                                    }
+                                    if (stack.LayerArray[@intCast(stack.height)].yLen >= 4) {
+                                        stack.LayerArray[@intCast(stack.height)].yLen -= 1;
+                                    }
+                                    speedmod -= 2;
+                                }
+                                if (stack.height == 4) {
+                                    if (stack.LayerArray[@intCast(stack.height)].xLen >= 3) {
+                                        stack.LayerArray[@intCast(stack.height)].xLen -= 1;
+                                    }
+                                    if (stack.LayerArray[@intCast(stack.height)].yLen >= 3) {
+                                        stack.LayerArray[@intCast(stack.height)].yLen -= 1;
+                                    }
+                                    speedmod -= 2;
+                                }
+                                if (stack.height == 6) {
+                                    if (stack.LayerArray[@intCast(stack.height)].xLen >= 2) {
+                                        stack.LayerArray[@intCast(stack.height)].xLen -= 1;
+                                    }
+                                    if (stack.LayerArray[@intCast(stack.height)].yLen >= 2) {
+                                        stack.LayerArray[@intCast(stack.height)].yLen -= 1;
+                                    }
+                                    speedmod -= 1;
+                                }
+                                if (stack.height == 7) {
+                                    if (stack.LayerArray[@intCast(stack.height)].xLen >= 2) {
+                                        stack.LayerArray[@intCast(stack.height)].xLen -= 1;
+                                    }
+                                    if (stack.LayerArray[@intCast(stack.height)].yLen >= 2) {
+                                        stack.LayerArray[@intCast(stack.height)].yLen -= 1;
+                                    }
+                                    speedmod -= 1;
+                                }
                                 placed = true;
                             }
                         } else {
@@ -238,7 +275,7 @@ fn appMain() callconv(.C) void {
             // only change / show top stack if haven't won or lost
             if (!win and !lose) {
                 // movment update
-                if ((@rem(tickcount, (1 + 2 * (7 - stack.height))) == 0) and !placed) { //(8 - stack.height)
+                if ((@rem(tickcount, speedmod) == 0) and !placed) { //(8 - stack.height)
                     stack.LayerArray[@intCast(stack.height)].x += xVel;
                     stack.LayerArray[@intCast(stack.height)].y += yVel;
                 }
@@ -276,6 +313,7 @@ fn appMain() callconv(.C) void {
                 // restart movement
                 xVel = 1;
                 yVel = 0;
+                speedmod = 8;
             }
 
             matrix.render();
