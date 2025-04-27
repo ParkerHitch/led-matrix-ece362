@@ -128,23 +128,13 @@ pub fn memory_byte_full(dir: JoystickDirEnum) bool {
     return returnValue;
 }
 
-pub fn memory_byte_shift_one(dir: JoystickDirEnum) void {
+pub fn memory_byte_shift(dir: JoystickDirEnum, value: u32) void {
     switch (dir) {
-        .BUTTON => button_memory_byte = (button_memory_byte << 1) + 1,
-        .LEFT => left_memory_byte = (left_memory_byte << 1) + 1,
-        .RIGHT => right_memory_byte = (right_memory_byte << 1) + 1,
-        .UP => up_memory_byte = (up_memory_byte << 1) + 1,
-        .DOWN => down_memory_byte = (down_memory_byte << 1) + 1,
-    }
-}
-
-pub fn memory_byte_shift_zero(dir: JoystickDirEnum) void {
-    switch (dir) {
-        .BUTTON => button_memory_byte = (button_memory_byte << 1),
-        .LEFT => left_memory_byte = (left_memory_byte << 1),
-        .RIGHT => right_memory_byte = (right_memory_byte << 1),
-        .UP => up_memory_byte = (up_memory_byte << 1),
-        .DOWN => down_memory_byte = (down_memory_byte << 1),
+        .BUTTON => button_memory_byte = (button_memory_byte << 1) + value,
+        .LEFT => left_memory_byte = (left_memory_byte << 1) + value,
+        .RIGHT => right_memory_byte = (right_memory_byte << 1) + value,
+        .UP => up_memory_byte = (up_memory_byte << 1) + value,
+        .DOWN => down_memory_byte = (down_memory_byte << 1) + value,
     }
 }
 
@@ -158,6 +148,12 @@ pub fn update_cur_value(dir: JoystickDirEnum) void {
     }
 }
 
-pub fn cur() bool {
-    return cur_button_pressed;
+pub fn cur(dir: JoystickDirEnum) bool {
+    return switch (dir) {
+        .BUTTON => cur_button_pressed,
+        .LEFT => cur_left,
+        .RIGHT => cur_right,
+        .UP => cur_up,
+        .DOWN => cur_down,
+    };
 }

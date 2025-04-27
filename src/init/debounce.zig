@@ -18,9 +18,9 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
 
     // button_a memory byte
     if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_4 != 0) {
-        Button_A.memory_byte_shift_one();
+        Button_A.memory_byte_shift(1);
     } else {
-        Button_A.memory_byte_shift_zero();
+        Button_A.memory_byte_shift(0);
     }
     if (Button_A.memory_byte_full() and Button_A.cur() == false) {
         Button_A.update_pressed();
@@ -28,9 +28,9 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
 
     // button_b memory byte
     if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_3 != 0) {
-        Button_B.memory_byte_shift_one();
+        Button_B.memory_byte_shift(1);
     } else {
-        Button_B.memory_byte_shift_zero();
+        Button_B.memory_byte_shift(0);
     }
     if (Button_B.memory_byte_full() and Button_B.cur() == false) {
         Button_B.update_pressed();
@@ -38,11 +38,11 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
 
     // joystick memory byte
     if (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_2 != 0) {
-        Joystick.memory_byte_shift_one(.BUTTON);
+        Joystick.memory_byte_shift(.BUTTON, 1);
     } else {
-        Joystick.memory_byte_shift_zero(.BUTTON);
+        Joystick.memory_byte_shift(.BUTTON, 0);
     }
-    if (Joystick.memory_byte_full(.BUTTON) and Joystick.cur() == false) {
+    if (Joystick.memory_byte_full(.BUTTON) and Joystick.cur(.BUTTON) == false) {
         Joystick.update_cur_value(.BUTTON);
     }
 }

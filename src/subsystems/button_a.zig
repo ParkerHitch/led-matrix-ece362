@@ -24,12 +24,8 @@ pub fn memory_byte_full() bool {
     return (memory_byte == 0xFF);
 }
 
-pub fn memory_byte_shift_one() void {
-    memory_byte = (memory_byte << 1) + 1;
-}
-
-pub fn memory_byte_shift_zero() void {
-    memory_byte = (memory_byte << 1);
+pub fn memory_byte_shift(value: u32) void {
+    memory_byte = (memory_byte << 1) + value;
 }
 
 pub fn update_pressed() void {
