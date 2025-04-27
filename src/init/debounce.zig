@@ -45,4 +45,44 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
     if (Joystick.memory_byte_full(.BUTTON) and Joystick.cur(.BUTTON) == false) {
         Joystick.update_cur_value(.BUTTON);
     }
+
+    // up memory byte
+    if (Joystick.is_in_range(.UP)) {
+        Joystick.memory_byte_shift(.UP, 1);
+    } else {
+        Joystick.memory_byte_shift(.UP, 0);
+    }
+    if (Joystick.memory_byte_full(.UP) and Joystick.cur(.UP) == false) {
+        Joystick.update_cur_value(.UP);
+    }
+
+    // down memory byte
+    if (Joystick.is_in_range(.DOWN)) {
+        Joystick.memory_byte_shift(.DOWN, 1);
+    } else {
+        Joystick.memory_byte_shift(.DOWN, 0);
+    }
+    if (Joystick.memory_byte_full(.DOWN) and Joystick.cur(.DOWN) == false) {
+        Joystick.update_cur_value(.DOWN);
+    }
+
+    // left memory byte
+    if (Joystick.is_in_range(.LEFT)) {
+        Joystick.memory_byte_shift(.LEFT, 1);
+    } else {
+        Joystick.memory_byte_shift(.LEFT, 0);
+    }
+    if (Joystick.memory_byte_full(.LEFT) and Joystick.cur(.LEFT) == false) {
+        Joystick.update_cur_value(.LEFT);
+    }
+
+    // right memory byte
+    if (Joystick.is_in_range(.RIGHT)) {
+        Joystick.memory_byte_shift(.RIGHT, 1);
+    } else {
+        Joystick.memory_byte_shift(.RIGHT, 0);
+    }
+    if (Joystick.memory_byte_full(.RIGHT) and Joystick.cur(.RIGHT) == false) {
+        Joystick.update_cur_value(.RIGHT);
+    }
 }

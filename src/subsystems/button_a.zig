@@ -24,7 +24,7 @@ pub fn memory_byte_full() bool {
     return (memory_byte == 0xFF);
 }
 
-pub fn memory_byte_shift(value: u32) void {
+pub fn memory_byte_shift(value: u8) void {
     memory_byte = (memory_byte << 1) + value;
 }
 

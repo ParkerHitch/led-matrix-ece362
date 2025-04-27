@@ -14,6 +14,8 @@ pub const zigApps = [_]*const Application{
     &@import("waterdrop.zig").app,
     &@import("easystacker.zig").app,
     &@import("hardstacker.zig").app,
+    &@import("cyclone.zig").app,
+    &@import("cycloneSingle.zig").app,
 };
 
 // comptime {

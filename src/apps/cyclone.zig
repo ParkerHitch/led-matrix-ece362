@@ -75,11 +75,11 @@ fn loadInnerRing(game: Cyclone) void {
 
 fn loadStateBox(game: Cyclone, win: bool, lose: bool) void {
     if (win) {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), .GREEN);
+        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), draw.Color(.GREEN));
     } else if (lose) {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), .RED);
+        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), draw.Color(.RED));
     } else {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), .BLUE);
+        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), draw.Color(.BLUE));
     }
 }
 
@@ -195,22 +195,22 @@ fn appMain() callconv(.C) void {
 
             if (!win and !lose) {
                 // movment update
-                if (@rem(tickcount, game.getspeed(game)) == 0 and !game.showing_placement) {
-                    game.xPos += game.xVel;
-                    game.yPos += game.yVel;
+                if (@rem(tickcount, game.getspeed()) == 0 and !game.showing_placement) {
+                    game.x += game.xVel;
+                    game.y += game.yVel;
                 }
 
                 // collision detection & resolution
-                if (game.xPos >= matrix.upperBound) {
+                if (game.x >= matrix.upperBound) {
                     game.xVel = 0;
                     game.yVel = 1;
-                } else if (game.yPos >= matrix.upperBound) {
+                } else if (game.y >= matrix.upperBound) {
                     game.xVel = -1;
                     game.yVel = 0;
-                } else if (game.xPos <= matrix.lowerBound) {
+                } else if (game.x <= matrix.lowerBound) {
                     game.xVel = 0;
                     game.yVel = -1;
-                } else if (game.yPos <= matrix.lowerBound) {
+                } else if (game.y <= matrix.lowerBound) {
                     game.xVel = 1;
                     game.yVel = 0;
                 }
