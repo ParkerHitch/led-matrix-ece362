@@ -70,6 +70,8 @@ pub fn FixedPoint(integer_size: comptime_int, fraction_size: comptime_int, signd
             } else if (b_type_info == .Union and @hasField(b_type, "fp") and @hasDecl(b_type, "fraction_bits")) {
                 // Mul with another, arbitrary fixed point number
                 return .{ .raw = (a.raw >> b_type.fraction_bits / 2) * (b.raw >> b_type.fraction_bits / 2) };
+            } else if (b_type_info == .Float or b_type_info == .ComptimeFloat) {
+                return .{ .raw = @intFromFloat(@as(b_type, @floatFromInt(a.raw)) * b) };
             } else {
                 @compileError("Called FixedPoint.mul with unsopported second operand type. Please use a raw integer or another FixedPoint number");
             }
@@ -104,9 +106,28 @@ pub fn FixedPoint(integer_size: comptime_int, fraction_size: comptime_int, signd
             }
         }
 
-        pub fn fromFloatLit(f: comptime_float) This {
-            comptime {
-                return .{ .raw = @floor(f * (1 << fraction_size)) };
+        pub fn fromFloat(f: anytype) This {
+            return .{ .raw = @intFromFloat(f * (1 << fraction_size)) };
+        }
+
+        pub fn toF32(a: This) f32 {
+            const start: f32 = @floatFromInt(a.raw);
+            const divisor: f32 = @floatFromInt(1 << fraction_size);
+            return start / divisor;
+        }
+
+        pub fn gt(a: This, b: anytype) bool {
+            const b_type = @TypeOf(b);
+            const b_type_info: std.builtin.Type = @typeInfo(b_type);
+
+            if (b_type == This) {
+                return a.raw > b.raw;
+            } else if (b_type_info == .Int or b_type == comptime_int) {
+                @compileError("Not implemented yet");
+            } else if (b_type_info == .Union and @hasField(b_type, "fp") and @hasDecl(b_type, "fraction_bits")) {
+                @compileError("Not implemented yet");
+            } else {
+                @compileError("Called FixedPoint.gt with unsopported second operand type. Please use a raw integer or another FixedPoint number");
             }
         }
 
@@ -207,7 +228,7 @@ pub fn FpRotor(scalarType: type) type {
 
         pub fn identity() This {
             return .{
-                .scalar = scalarType.fromFloatLit(1.0),
+                .scalar = scalarType.fromFloat(1.0),
                 .xy = .{ .raw = 0 },
                 .yz = .{ .raw = 0 },
                 .zx = .{ .raw = 0 },
@@ -288,6 +309,32 @@ pub fn FpRotor(scalarType: type) type {
                 .zx = a.zx.mul(-1),
                 .xy = a.xy.mul(-1),
             };
+        }
+
+        const threshold = scalarType.fromFloat(0.9);
+        const one = scalarType.fromFloat(1.0);
+        pub fn slerpI(a: This, ratio: scalarType) This {
+            if (a.scalar.gt(threshold)) {
+                // Just lerp. We are too close it's fine
+                return .{
+                    .scalar = (one.sub(ratio)).add(ratio.mul(a.scalar)),
+                    .yz = ratio.mul(a.yz),
+                    .zx = ratio.mul(a.zx),
+                    .xy = ratio.mul(a.xy),
+                };
+            } else {
+                // Slerp
+                const angle: f32 = std.math.acos(a.scalar.toF32());
+                const aConst: f32 = std.math.sin(ratio.toF32() * angle) / std.math.sin(angle);
+                const iConst: f32 = std.math.sin(one.sub(ratio).toF32() * angle) / std.math.sin(angle);
+                const out = This{
+                    .scalar = scalarType.fromFloat(iConst).add(a.scalar.mul(aConst)),
+                    .yz = a.yz.mul(aConst),
+                    .zx = a.zx.mul(aConst),
+                    .xy = a.xy.mul(aConst),
+                };
+                return out.norm();
+            }
         }
 
         pub fn prettyPrint(self: This, writer: anytype, decimals: comptime_int) !void {
