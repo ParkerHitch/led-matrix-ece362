@@ -45,7 +45,7 @@ const StackLayer = struct {
 };
 
 const Stack = struct {
-    LayerArray: [matrix.upperBound]StackLayer = [_]StackLayer{.{}} ** matrix.upperBound,
+    LayerArray: [8]StackLayer = [_]StackLayer{.{}} ** 8,
 
     height: i32 = 0,
 };
