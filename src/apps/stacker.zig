@@ -201,7 +201,7 @@ fn appMain() callconv(.C) void {
                             // if y lower bound is lower than the bound, replace it
                             if (!lowerY) {
                                 stack.LayerArray[@intCast(stack.height)].y = stack.LayerArray[@intCast(stack.height - 1)].y;
-                                stack.LayerArray[@intCast(stack.height)].xLen = stack.LayerArray[@intCast(stack.height)].x + stack.LayerArray[@intCast(stack.height)].xLen - stack.LayerArray[@intCast(stack.height - 1)].x;
+                                stack.LayerArray[@intCast(stack.height)].yLen = stack.LayerArray[@intCast(stack.height)].y + stack.LayerArray[@intCast(stack.height)].yLen - stack.LayerArray[@intCast(stack.height - 1)].y;
                             }
                             // if y upper bound is lower than the bound, replace it
                             if (!upperY) {
