@@ -16,7 +16,7 @@
 // so if your file is name myApp.c your Application header struct would be
 // Application myApp = { ...
 // your file name must not be the same as any other app
-void appMain();
+static void appMain();
 
 Application templateApp = {
     .renderFn = &appMain,
@@ -28,13 +28,13 @@ Application templateApp = {
 
 
 // app entry point
-void appMain() {
+static void appMain() {
     // time keeping variable
     DeltaTime dt = (DeltaTime){ .startTime = 0, .currTime = 0 };
     dtStart(&dt);
 
     // time keeping vairiables to limit tickRate5
-    const uint32_t tickRate = 5; // i.e. target fps or update rate 
+    const uint32_t tickRate = 50; // i.e. target fps or update rate 
     const uint32_t updatePeroid = 1000 / tickRate; // 1000 ms * (period of a tick)
     uint32_t dtSinceUpdate = 0;
 

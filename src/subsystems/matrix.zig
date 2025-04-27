@@ -19,6 +19,9 @@ const GPIOB = peripherals.GPIOB;
 const GPIOC = peripherals.GPIOC;
 const TIM2 = peripherals.TIM2;
 
+pub const upperBound: comptime_int = 7;
+pub const lowerBound: comptime_int = 0;
+
 // Frame buffers for rendering
 var frameBuff1: FrameBuffer = .{};
 var frameBuff2: FrameBuffer = .{};
@@ -150,6 +153,9 @@ pub fn init(sysclock_divisor: periph_types.spi_v2.BR) void {
 
     // Enable interrupt
     // cmsis.NVIC_EnableIRQ(cmsis.DMA1_Ch4_7_DMA2_Ch3_5_IRQn);
+
+    clearFrame(.{ .r = 0, .g = 0, .b = 0 });
+    render();
 }
 
 /// Begins an async shift opperation.

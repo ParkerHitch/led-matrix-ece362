@@ -6,6 +6,11 @@ pub const zigApps = [_]*const Application{
     &@import("templateApp.zig").app,
     &@import("axisApp.zig").app,
     &@import("tesseract.zig").app,
+    &@import("dvdApp.zig").app,
+    &@import("fireworks.zig").app,
+    &@import("shrinkBox.zig").app,
+    &@import("waterdrop.zig").app,
+    &@import("stacker.zig").app,
 };
 
 // comptime {

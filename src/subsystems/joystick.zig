@@ -14,6 +14,7 @@ var dtx: deltaT.DeltaTime = .{};
 var dty: deltaT.DeltaTime = .{};
 var x_time_held: u32 = 0;
 var y_time_held: u32 = 0;
+pub var memory_byte: u8 = 0;
 
 var voltVec = [2]u32{ 0, 0 };
 
@@ -27,13 +28,11 @@ pub fn joystick_update() void {
     prev_button_pressed = cur_button_pressed;
     cur_button_pressed = (cImport.cmsis.GPIOC.*.IDR & cImport.cmsis.GPIO_IDR_2) != 0;
     prev_y_zeroed = y_zeroed;
-    y_zeroed = (voltVec[1] > 1600 and voltVec[1] < 2400);
     prev_x_zeroed = x_zeroed;
-    x_zeroed = (voltVec[0] > 1600 and voltVec[0] < 2400);
 
     if (!x_zeroed) {
         x_time_held += dtx.milli();
-        if (x_time_held > 500) {
+        if (x_time_held > 250) {
             x_zeroed = true;
             x_time_held = 0;
         }
@@ -43,7 +42,7 @@ pub fn joystick_update() void {
 
     if (!y_zeroed) {
         y_time_held += dty.milli();
-        if (y_time_held > 500) {
+        if (y_time_held > 250) {
             y_zeroed = true;
             y_time_held = 0;
         }

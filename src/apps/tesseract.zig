@@ -7,12 +7,12 @@ const draw = @import("../subsystems/draw.zig");
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "Template Zig App",
+    .name = "Tesseract",
     .authorfirst = "John",
     .authorlast = "Burns",
 };
 
-pub fn appMain() callconv(.C) void {
+fn appMain() callconv(.C) void {
     var dt: deltaTime.DeltaTime = .{};
     dt.start();
     const tickRate: u32 = 1; // i.e. target fps
