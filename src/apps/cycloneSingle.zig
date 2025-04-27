@@ -170,22 +170,22 @@ fn appMain() callconv(.C) void {
 
             if (!win and !lose) {
                 // movment update
-                if (@rem(tickcount, game.getspeed(game)) == 0 and !game.showing_placement) {
-                    game.xPos += game.xVel;
-                    game.yPos += game.yVel;
+                if (@rem(tickcount, game.getspeed()) == 0 and !game.showing_placement) {
+                    game.x += game.xVel;
+                    game.y += game.yVel;
                 }
 
                 // collision detection & resolution
-                if (game.xPos >= matrix.upperBound) {
+                if (game.x >= matrix.upperBound) {
                     game.xVel = 0;
                     game.yVel = 1;
-                } else if (game.yPos >= matrix.upperBound) {
+                } else if (game.y >= matrix.upperBound) {
                     game.xVel = -1;
                     game.yVel = 0;
-                } else if (game.xPos <= matrix.lowerBound) {
+                } else if (game.x <= matrix.lowerBound) {
                     game.xVel = 0;
                     game.yVel = -1;
-                } else if (game.yPos <= matrix.lowerBound) {
+                } else if (game.y <= matrix.lowerBound) {
                     game.xVel = 1;
                     game.yVel = 0;
                 }
@@ -194,7 +194,7 @@ fn appMain() callconv(.C) void {
             loadInnerRing();
             matrix.setPixel(game.x, game.y, 0, draw.Color(.YELLOW));
             if (win) {
-                draw.box(3, 3, 0, 2, 2, 1, .GREEN);
+                draw.box(3, 3, 0, 2, 2, 1, draw.Color(.GREEN));
             }
 
             if (restart.pressed()) {
