@@ -45,9 +45,10 @@ pub fn main() void {
     }
 
     // NOTE: TEMP
-    // const tempAppIdx = 6;
-    // const appMain = apps[tempAppIdx].renderFn.?;
-    // appMain();
+    cImport.nano_wait(5552300);
+    const tempAppIdx = 7;
+    const testAppMain = apps[tempAppIdx].renderFn.?;
+    testAppMain();
 
     // initializing display
     const MENU = "Select App:";

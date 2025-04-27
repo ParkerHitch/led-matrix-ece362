@@ -42,7 +42,7 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
     } else {
         Joystick.memory_byte_shift_zero(.BUTTON);
     }
-    if (Joystick.memory_byte_full(.BUTTON) and Joystick.button_pressed(.BUTTON) == false) {
+    if (Joystick.memory_byte_full(.BUTTON) and Joystick.button_pressed() == false) {
         Joystick.update_cur_value(.BUTTON);
     }
 }

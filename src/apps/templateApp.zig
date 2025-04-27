@@ -70,19 +70,19 @@ fn appMain() callconv(.C) void {
         // and limit the framefrate to a max value determined by tickRate
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
-            Joystick.joystick_update();
+            joystick.joystick_update();
             timeSinceUpdate = 0;
 
             // movment update
             xPos += xVel;
 
             // collision detection & resolution
-            if (xPos > matrix.upperBound) 
-                xPos = matrix.upperBound
+            if (xPos > matrix.upperBound) {
+                xPos = matrix.upperBound;
                 xVel *= -1;
                 drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
-            } else if (xPos < matrix.lowerBound) 
-                xPos = matrix.lowerBound
+            } else if (xPos < matrix.lowerBound) {
+                xPos = matrix.lowerBound;
                 xVel *= -1;
                 drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
             }

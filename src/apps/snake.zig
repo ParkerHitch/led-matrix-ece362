@@ -87,7 +87,6 @@ fn appMain() callconv(.C) void {
             },
         }
 
-
         matrix.render();
     }
 }
@@ -146,7 +145,7 @@ const Snake = struct {
             },
             .NONE => {
                 self.body[self.headIdx] = self.body[prevHeadIdx]; // Init state
-            }
+            },
         }
     }
 
@@ -158,8 +157,7 @@ const Snake = struct {
         const headPos = self.body[self.headIdx];
 
         // WARN: AVERT YOUR EYES LESS THEY BE BLINDED!
-        return
-            headPos.x > matrix.upperBound or
+        return headPos.x > matrix.upperBound or
             headPos.x < matrix.lowerBound or
             headPos.y > matrix.upperBound or
             headPos.y < matrix.lowerBound or

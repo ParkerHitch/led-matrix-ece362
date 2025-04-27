@@ -94,7 +94,7 @@ fn appMain() callconv(.C) void {
     var state: AppState = .{
         .updatePeriod = 1000 / 30,
     };
-    var cursor: Cursor = .{};
+    var cursor: Cursor = .{ .x = 3, .y = 3, .z = 0 };
 
     while (state.appRunning) {
         state.timeSinceUpdate += dt.milli();
@@ -112,23 +112,28 @@ fn appMain() callconv(.C) void {
             if (!cursor.move(.FOWARD)) {
                 cursor.color = draw.Color(.RED);
             }
-        } else if (joystick.moved_down()) {
+        }
+        if (joystick.moved_down()) {
             if (!cursor.move(.BACK)) {
                 cursor.color = draw.Color(.RED);
             }
-        } else if (joystick.moved_left()) {
+        }
+        if (joystick.moved_left()) {
             if (!cursor.move(.LEFT)) {
                 cursor.color = draw.Color(.RED);
             }
-        } else if (joystick.moved_right()) {
+        }
+        if (joystick.moved_right()) {
             if (!cursor.move(.RIGHT)) {
                 cursor.color = draw.Color(.RED);
             }
-        } else if (buttonA.pressed()) {
+        }
+        if (buttonA.pressed()) {
             if (!cursor.move(.DOWN)) {
                 cursor.color = draw.Color(.RED);
             }
-        } else if (buttonB.pressed()) {
+        }
+        if (buttonB.pressed()) {
             if (!cursor.move(.UP)) {
                 cursor.color = draw.Color(.RED);
             }
