@@ -103,7 +103,7 @@ fn appMain() callconv(.C) void {
     var waitcount: i32 = 0;
 
     // gamestate variables
-    var win: bool = true;
+    var win: bool = false;
     var lose: bool = false;
 
     // TODO: replace true in while true with joystick press exit condition
