@@ -7,6 +7,7 @@ const draw = @import("../subsystems/draw.zig");
 const joystick = @import("../subsystems/joystick.zig");
 const buttonA = @import("../subsystems/button_a.zig");
 const buttonB = @import("../subsystems/button_b.zig");
+const UartDebug = @import("../util/uartDebug.zig");
 const Vec3 = @import("../subsystems/vec3.zig").Vec3;
 
 const maxSnakeSize = 256; // NOTE: win condition is to reach max snake size
@@ -61,6 +62,7 @@ fn appMain() callconv(.C) void {
             .PLAY => {
                 // movement system
                 snake.move();
+                UartDebug.printIfDebug("Snake Head = <{}, {}, {}>\n", .{ snake.body[snake.headIdx].x, snake.body[snake.headIdx].y, snake.body[snake.headIdx].z }) catch {};
 
                 // collision system
                 if (snake.headOutOfBounds() or snake.bodyCollision(snake.body[snake.headIdx])) {

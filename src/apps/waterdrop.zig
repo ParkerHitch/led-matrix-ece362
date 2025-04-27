@@ -7,6 +7,7 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
+const joystick = @import("../subsystems/joystick.zig");
 // const rand = std.Random; // <-- uncomment for random lib
 //
 // const test = rand.DefaultPrng;
@@ -65,14 +66,18 @@ fn appMain() callconv(.C) void {
     var prng = std.rand.DefaultPrng.init(@intCast(deltaTime.timestamp()));
     const rand = prng.random();
 
-    // TODO: replace true in while true with joystick press exit condition
-    while (true) {
+    var appRunning: bool = true;
+
+    while (appRunning) {
         // NOTE: There are other ways to use dt for keeping track of render time.
         // This method will lock your update logic to the framerate of the display,
         // and limit the framefrate to a max value determined by tickRate
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
+
+            joystick.joystick_init();
+            appRunning = !joystick.button_pressed();
 
             matrix.clearFrame(draw.Color(.BLACK));
 

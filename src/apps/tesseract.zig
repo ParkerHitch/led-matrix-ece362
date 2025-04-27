@@ -3,6 +3,7 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
+const joystick = @import("../subsystems/joystick.zig");
 
 pub const app: Application = .{
     .renderFn = &appMain,
@@ -21,10 +22,16 @@ fn appMain() callconv(.C) void {
 
     var drawIdx: u32 = 0;
 
-    while (true) {
+    var appRunning: bool = true;
+
+    while (appRunning) {
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0.0;
+
+            joystick.joystick_update();
+            appRunning = !joystick.button_pressed();
+
             drawIdx = if (drawIdx >= 7) 0 else drawIdx + 1;
 
             // draw to the display

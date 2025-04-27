@@ -42,7 +42,7 @@ pub fn joystick_update() void {
     // right_memory_byte = 0;
     // up_memory_byte = 0;
     // down_memory_byte = 0;
-    prev_button_pressed = cur_button_pressed;
+    // prev_button_pressed = cur_button_pressed;
     prev_y_zeroed = y_zeroed;
     prev_x_zeroed = x_zeroed;
 
@@ -80,7 +80,7 @@ pub fn button_pressed() bool {
 }
 
 pub fn moved_up() bool {
-    if (prev_y_zeroed and voltVec[1] > 3947) {
+    if (prev_y_zeroed and voltVec[1] > 3547) {
         y_zeroed = false;
         dty.start();
         return true;
@@ -89,7 +89,7 @@ pub fn moved_up() bool {
 }
 
 pub fn moved_down() bool {
-    if (prev_y_zeroed and voltVec[1] < 100) {
+    if (prev_y_zeroed and voltVec[1] < 500) {
         y_zeroed = false;
         dty.start();
         return true;
@@ -98,7 +98,7 @@ pub fn moved_down() bool {
 }
 
 pub fn moved_right() bool {
-    if (prev_x_zeroed and voltVec[0] > 3947) {
+    if (prev_x_zeroed and voltVec[0] > 3547) {
         x_zeroed = false;
         dtx.start();
         return true;
@@ -107,7 +107,7 @@ pub fn moved_right() bool {
 }
 
 pub fn moved_left() bool {
-    if (prev_x_zeroed and voltVec[0] < 100) {
+    if (prev_x_zeroed and voltVec[0] < 500) {
         x_zeroed = false;
         dtx.start();
         return true;
@@ -156,4 +156,8 @@ pub fn update_cur_value(dir: JoystickDirEnum) void {
         .UP => cur_up = true,
         .DOWN => cur_down = true,
     }
+}
+
+pub fn cur() bool {
+    return cur_button_pressed;
 }

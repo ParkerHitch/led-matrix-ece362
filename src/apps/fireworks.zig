@@ -3,7 +3,7 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
-//const rand = std.Random; // <-- uncomment for random lib
+const joystick = @import("../subsystems/joystick.zig");
 
 pub const app: Application = .{
     .renderFn = &renderFireworks,
@@ -33,10 +33,15 @@ fn renderFireworks() callconv(.C) void {
     var prng = std.rand.DefaultPrng.init(@intCast(deltaTime.timestamp()));
     const rand = prng.random();
 
-    while (true) {
+    var appRunning: bool = true;
+
+    while (appRunning) {
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
+
+            joystick.joystick_update();
+            appRunning = !joystick.button_pressed();
 
             matrix.clearFrame(draw.Color(.BLACK));
 

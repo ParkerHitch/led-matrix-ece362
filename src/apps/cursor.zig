@@ -92,9 +92,9 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     var state: AppState = .{
-        .updatePeriod = 1000 / 30,
+        .updatePeriod = 1000 / 30, // NOTE: temp
     };
-    var cursor: Cursor = .{ .x = 3, .y = 3, .z = 0 };
+    var cursor: Cursor = .{ .x = 0, .y = 0, .z = 0 };
 
     while (state.appRunning) {
         state.timeSinceUpdate += dt.milli();

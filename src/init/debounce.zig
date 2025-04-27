@@ -22,7 +22,7 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
     } else {
         Button_A.memory_byte_shift_zero();
     }
-    if (Button_A.memory_byte_full() and Button_A.pressed() == false) {
+    if (Button_A.memory_byte_full() and Button_A.cur() == false) {
         Button_A.update_pressed();
     }
 
@@ -32,7 +32,7 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
     } else {
         Button_B.memory_byte_shift_zero();
     }
-    if (Button_B.memory_byte_full() and Button_B.pressed() == false) {
+    if (Button_B.memory_byte_full() and Button_B.cur() == false) {
         Button_B.update_pressed();
     }
 
@@ -42,7 +42,7 @@ pub export fn TIM14_IRQHandler() callconv(.C) void {
     } else {
         Joystick.memory_byte_shift_zero(.BUTTON);
     }
-    if (Joystick.memory_byte_full(.BUTTON) and Joystick.button_pressed() == false) {
+    if (Joystick.memory_byte_full(.BUTTON) and Joystick.cur() == false) {
         Joystick.update_cur_value(.BUTTON);
     }
 }

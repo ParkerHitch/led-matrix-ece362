@@ -44,11 +44,6 @@ pub fn main() void {
         UartDebug.init();
     }
 
-    // NOTE: TEMP
-    cImport.nano_wait(5552300);
-    const tempAppIdx = 7;
-    const testAppMain = apps[tempAppIdx].renderFn.?;
-
     // initializing display
     const MENU = "Select App:";
     Screen.screen_init();
@@ -59,9 +54,14 @@ pub fn main() void {
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
-    testAppMain();
+    // // NOTE: TEMP
+    // const tempAppIdx = 7;
+    // const testAppMain = apps[tempAppIdx].renderFn.?;
+    // testAppMain();
+
     while (true) {
         Joystick.joystick_update();
+        // UartDebug.printIfDebug("Joystick X = {}, Joystick Y = {}\n", .{ Joystick.voltVec[0], Joystick.voltVec[1] }) catch {};
 
         if (RUNNING_APP == 1) {
             if (Joystick.button_pressed()) {

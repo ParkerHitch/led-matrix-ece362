@@ -2,6 +2,7 @@ const microzig = @import("microzig");
 const std = @import("std");
 const cImport = @import("../cImport.zig");
 const apps = @import("../main.zig").apps;
+const print = @import("../util/uartDebug.zig").printIfDebug;
 
 var prev_pressed = false;
 var cur_pressed = false;
@@ -33,4 +34,8 @@ pub fn memory_byte_shift_zero() void {
 
 pub fn update_pressed() void {
     cur_pressed = true;
+}
+
+pub fn cur() bool {
+    return cur_pressed;
 }

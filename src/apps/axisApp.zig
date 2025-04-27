@@ -2,6 +2,7 @@ const Application = @import("../cImport.zig").Application;
 const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
+const joystick = @import("../subsystems/joystick.zig");
 
 pub const app: Application = .{
     .renderFn = &render,
@@ -12,7 +13,13 @@ pub const app: Application = .{
 };
 
 fn render() callconv(.C) void {
-    while (true) {
+    var appRunning: bool = true;
+
+    while (appRunning) {
+        // get input
+        joystick.joystick_update();
+        appRunning = !joystick.button_pressed();
+
         matrix.clearFrame(.{ .r = 0, .g = 0, .b = 0 });
 
         for (1..8) |x| {
