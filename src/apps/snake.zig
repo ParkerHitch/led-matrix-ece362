@@ -10,7 +10,7 @@ const buttonB = @import("../subsystems/button_b.zig");
 const UartDebug = @import("../util/uartDebug.zig");
 const Vec3 = @import("../subsystems/vec3.zig").Vec3;
 
-const maxSnakeSize = 256; // NOTE: win condition is to reach max snake size
+const maxSnakeSize = 16; // NOTE: win condition is to reach max snake size
 
 pub const app: Application = .{
     .renderFn = &appMain,
@@ -27,7 +27,7 @@ fn appMain() callconv(.C) void {
     var prng = Random.DefaultPrng.init(@intCast(deltaTime.timestamp()));
     const rand = prng.random();
 
-    var state: AppState = .{ .updatePeriod = 1000 / 4 };
+    var state: AppState = .{ .updatePeriod = 1000 / 2 };
     var snake: Snake = .{};
     snake.body[snake.headIdx] = randVec3(&rand);
     var pellot: Vec3 = newPellotPos(&rand, &snake);
@@ -37,6 +37,7 @@ fn appMain() callconv(.C) void {
         if (state.timeSinceUpdate < state.updatePeriod) {
             continue;
         }
+
         matrix.clearFrame(draw.Color(.BLACK));
         state.timeSinceUpdate = 0;
 
@@ -46,15 +47,20 @@ fn appMain() callconv(.C) void {
 
         if (joystick.moved_up() and snake.headDir != .BACK) {
             snake.headDir = .FOWARD;
-        } else if (joystick.moved_down() and snake.headDir != .FOWARD) {
+        }
+        if (joystick.moved_down() and snake.headDir != .FOWARD) {
             snake.headDir = .BACK;
-        } else if (joystick.moved_right() and snake.headDir != .LEFT) {
+        }
+        if (joystick.moved_right() and snake.headDir != .LEFT) {
             snake.headDir = .RIGHT;
-        } else if (joystick.moved_left() and snake.headDir != .RIGHT) {
+        }
+        if (joystick.moved_left() and snake.headDir != .RIGHT) {
             snake.headDir = .LEFT;
-        } else if (buttonA.pressed() and snake.headDir != .UP) {
+        }
+        if (buttonA.pressed() and snake.headDir != .UP) {
             snake.headDir = .DOWN;
-        } else if (buttonB.pressed() and snake.headDir != .DOWN) {
+        }
+        if (buttonB.pressed() and snake.headDir != .DOWN) {
             snake.headDir = .UP;
         }
 
@@ -125,29 +131,28 @@ const Snake = struct {
     fn move(self: *Snake) void {
         const prevHeadIdx = self.headIdx;
         self.headIdx = if (self.headIdx == 0) maxSnakeSize - 1 else self.headIdx - 1;
+        self.body[self.headIdx] = self.body[prevHeadIdx];
 
         switch (self.headDir) {
             .UP => {
-                self.body[self.headIdx].z = self.body[prevHeadIdx].z + 1;
+                self.body[self.headIdx].z += 1;
             },
             .DOWN => {
-                self.body[self.headIdx].z = self.body[prevHeadIdx].z - 1;
+                self.body[self.headIdx].z -= 1;
             },
             .RIGHT => {
-                self.body[self.headIdx].x = self.body[prevHeadIdx].x + 1;
+                self.body[self.headIdx].x += 1;
             },
             .LEFT => {
-                self.body[self.headIdx].x = self.body[prevHeadIdx].x - 1;
+                self.body[self.headIdx].x -= 1;
             },
             .FOWARD => {
-                self.body[self.headIdx].y = self.body[prevHeadIdx].y + 1;
+                self.body[self.headIdx].y += 1;
             },
             .BACK => {
-                self.body[self.headIdx].y = self.body[prevHeadIdx].y - 1;
+                self.body[self.headIdx].y -= 1;
             },
-            .NONE => {
-                self.body[self.headIdx] = self.body[prevHeadIdx]; // Init state
-            },
+            .NONE => {},
         }
     }
 

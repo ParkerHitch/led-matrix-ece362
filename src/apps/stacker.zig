@@ -88,7 +88,7 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 50; // i.e. target fps or update rate
+    const tickRate: u32 = 60; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 

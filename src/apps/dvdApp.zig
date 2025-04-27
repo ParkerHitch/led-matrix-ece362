@@ -5,6 +5,7 @@ const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
 const Vec3f = @import("../subsystems/vec3.zig").Vec3f;
 const joystick = @import("../subsystems/joystick.zig");
+const Random = std.Random;
 
 pub const app: Application = .{
     .renderFn = &appMain,
@@ -24,8 +25,12 @@ fn appMain() callconv(.C) void {
     var dt: deltaTime.DeltaTime = .{};
     dt.start();
 
-    var dvd = draw.Box.initCube(Vec3f.init(0, 0, 0), 3, draw.Color(.WHITE));
-    var dvdVel = Vec3f.init(0.16, 0.08, 0.1);
+    var prng = Random.DefaultPrng.init(@intCast(deltaTime.timestamp()));
+    const rand = prng.random();
+
+    const cubeSize: u32 = 3;
+    var dvd = draw.Box.initCube(randVec3f(&rand, 0, 7 - cubeSize), cubeSize, draw.Color(@enumFromInt(rand.intRangeAtMost(u32, 0, 6))));
+    var dvdVel = Vec3f.init(-0.16, 0.08, 0.1);
 
     var appRunning: bool = true;
 
@@ -35,8 +40,8 @@ fn appMain() callconv(.C) void {
 
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
-            //updateMovement(&dvd, &dvdVel);
             dvd.pos = dvd.pos.add(&dvdVel);
+
             if (dvd.pos.x + @as(f32, @floatFromInt(dvd.width)) - 1 > matrix.upperBound) {
                 dvd.pos.x = matrix.upperBound - @as(f32, @floatFromInt(dvd.width)) + 1;
                 dvdVel.x = dvdVel.x * -1.0;
@@ -62,6 +67,13 @@ fn appMain() callconv(.C) void {
                 dvdVel.z = dvdVel.z * -1.0;
             }
 
+            // const x: i32 = @intFromFloat(dvd.pos.x);
+            // const y: i32 = @intFromFloat(dvd.pos.y);
+            // const z: i32 = @intFromFloat(dvd.pos.z);
+            // if (isCorner(x, y, z, @intCast(cubeSize))) {
+            //     dvd.color = draw.Color(@enumFromInt(rand.intRangeAtMost(u32, 0, 6)));
+            // }
+
             // draw to the display
             matrix.clearFrame(draw.Color(.BLACK));
 
@@ -76,4 +88,18 @@ fn appMain() callconv(.C) void {
 fn updateMovement(box: *draw.Box, vel: *Vec3f) void {
     vel.* = vel.mult(@as(f32, @floatFromInt(timeSinceUpdate)) / 1000.0);
     box.pos = box.pos.add(vel);
+}
+
+fn randVec3f(rand: *const Random, min: i32, max: i32) Vec3f {
+    return Vec3f.init(
+        @floatFromInt(rand.intRangeAtMost(i32, min, max)),
+        @floatFromInt(rand.intRangeAtMost(i32, min, max)),
+        @floatFromInt(rand.intRangeAtMost(i32, min, max)),
+    );
+}
+
+fn isCorner(x: i32, y: i32, z: i32, width: i32) bool {
+    return (x == 0 or x == 7 - width) and
+        (y == 0 or y == 7 - width) and
+        (z == 0 or z == 7 - width);
 }
