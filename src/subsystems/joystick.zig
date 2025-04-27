@@ -37,11 +37,11 @@ pub fn joystick_init() void {
 }
 
 pub fn joystick_update() void {
-    button_memory_byte = 0;
-    left_memory_byte = 0;
-    right_memory_byte = 0;
-    up_memory_byte = 0;
-    down_memory_byte = 0;
+    // button_memory_byte = 0;
+    // left_memory_byte = 0;
+    // right_memory_byte = 0;
+    // up_memory_byte = 0;
+    // down_memory_byte = 0;
     prev_button_pressed = cur_button_pressed;
     prev_y_zeroed = y_zeroed;
     prev_x_zeroed = x_zeroed;
@@ -68,11 +68,19 @@ pub fn joystick_update() void {
 }
 
 pub fn button_pressed() bool {
-    return (cur_button_pressed and !prev_button_pressed);
+    const dummy_cur = cur_button_pressed;
+    const dummy_prev = prev_button_pressed;
+
+    if (button_memory_byte != 0xFF) {
+        cur_button_pressed = false;
+    }
+    prev_button_pressed = cur_button_pressed;
+
+    return (dummy_cur and !dummy_prev);
 }
 
 pub fn moved_up() bool {
-    if (prev_y_zeroed and voltVec[1] > 3500) {
+    if (prev_y_zeroed and voltVec[1] > 3947) {
         y_zeroed = false;
         dty.start();
         return true;
@@ -81,7 +89,7 @@ pub fn moved_up() bool {
 }
 
 pub fn moved_down() bool {
-    if (prev_y_zeroed and voltVec[1] < 500) {
+    if (prev_y_zeroed and voltVec[1] < 100) {
         y_zeroed = false;
         dty.start();
         return true;
@@ -90,7 +98,7 @@ pub fn moved_down() bool {
 }
 
 pub fn moved_right() bool {
-    if (prev_x_zeroed and voltVec[0] > 3500) {
+    if (prev_x_zeroed and voltVec[0] > 3947) {
         x_zeroed = false;
         dtx.start();
         return true;
@@ -99,7 +107,7 @@ pub fn moved_right() bool {
 }
 
 pub fn moved_left() bool {
-    if (prev_x_zeroed and voltVec[0] < 500) {
+    if (prev_x_zeroed and voltVec[0] < 100) {
         x_zeroed = false;
         dtx.start();
         return true;

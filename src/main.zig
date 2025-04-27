@@ -48,7 +48,6 @@ pub fn main() void {
     cImport.nano_wait(5552300);
     const tempAppIdx = 7;
     const testAppMain = apps[tempAppIdx].renderFn.?;
-    testAppMain();
 
     // initializing display
     const MENU = "Select App:";
@@ -60,6 +59,7 @@ pub fn main() void {
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
+    testAppMain();
     while (true) {
         Joystick.joystick_update();
 
