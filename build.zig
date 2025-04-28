@@ -156,6 +156,13 @@ pub fn build(b: *std.Build) !void {
         .optimize = .ReleaseSmall,
         .root_source_file = b.path("src/main.zig"),
     });
+    firmware_check.add_include_path(b.path("CMSIS_5/CMSIS/Core/Include/"));
+    firmware_check.add_include_path(b.path("cmsis-device-f0/Include/"));
+    firmware_check.app_mod.addIncludePath(b.path("CMSIS_5/CMSIS/Core/Include/"));
+    firmware_check.app_mod.addIncludePath(b.path("cmsis-device-f0/Include/"));
+    firmware_check.add_include_path(b.path("include/"));
+    firmware_check.app_mod.addIncludePath(b.path("include/"));
+    firmware_check.app_mod.addOptions("options", options);
     const check = b.step("check", "Check if firmware compiles");
     check.dependOn(&firmware_check.artifact.step);
 }

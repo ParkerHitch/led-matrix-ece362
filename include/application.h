@@ -39,7 +39,6 @@ typedef struct {
 
 // DeltaTime struct
 typedef struct {
-    uint32_t startTime;
     uint32_t currTime;
 } DeltaTime;
 
