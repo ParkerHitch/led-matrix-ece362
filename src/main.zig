@@ -56,11 +56,6 @@ pub fn main() void {
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
-    // // NOTE: TEMP
-    // const tempAppIdx = 7;
-    // const testAppMain = apps[tempAppIdx].renderFn.?;
-    // testAppMain();
-
     while (true) {
         // UartDebug.printIfDebug("Joystick X = {}, Joystick Y = {}\n", .{ Joystick.voltVec[0], Joystick.voltVec[1] }) catch {};
 
