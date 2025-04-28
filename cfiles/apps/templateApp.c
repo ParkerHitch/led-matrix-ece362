@@ -30,7 +30,7 @@ Application templateApp = {
 // app entry point
 static void appMain() {
     // time keeping variable
-    DeltaTime dt = (DeltaTime){ .startTime = 0, .currTime = 0 };
+    DeltaTime dt = (DeltaTime){ .currTime = 0 };
     dtStart(&dt);
 
     // time keeping vairiables to limit tickRate5
