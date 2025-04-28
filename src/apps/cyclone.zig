@@ -33,7 +33,7 @@ pub const app: Application = .{
 };
 
 const Cyclone = struct {
-    // state of game 1-4
+    // state of game 1-8
     state: i32 = 1,
 
     // x and y stats for moving light
@@ -46,46 +46,49 @@ const Cyclone = struct {
     showing_placement: bool = false,
 
     pub fn getspeed(self: Cyclone) i32 {
-        return 5 - self.state;
+        var speed: i32 = 0;
+        speed = 5 - @divTrunc(self.state, 2);
+
+        return speed;
     }
 };
 
 fn loadInnerRing(game: Cyclone) void {
     for (1..7) |x| {
         matrix.setPixel(@intCast(x), 6, 0, draw.Color(.RED));
-        if (game.state == 1) {
+        if (game.state == 1 or game.state == 2) {
             if (x >= 2 and x <= 5) {
-                matrix.setPixel(@intCast(x), 1, 0, draw.Color(.GREEN));
+                matrix.setPixel(@intCast(x), 1, (game.state - 1), draw.Color(.GREEN));
             } else {
-                matrix.setPixel(@intCast(x), 1, 0, draw.Color(.RED));
+                matrix.setPixel(@intCast(x), 1, (game.state - 1), draw.Color(.RED));
             }
         } else {
             if (x >= 3 and x <= 4) {
-                matrix.setPixel(@intCast(x), 1, 0, draw.Color(.GREEN));
+                matrix.setPixel(@intCast(x), 1, (game.state - 1), draw.Color(.GREEN));
             } else {
-                matrix.setPixel(@intCast(x), 1, 0, draw.Color(.RED));
+                matrix.setPixel(@intCast(x), 1, (game.state - 1), draw.Color(.RED));
             }
         }
     }
     for (1..7) |y| {
-        matrix.setPixel(1, @intCast(y), 0, draw.Color(.RED));
-        matrix.setPixel(6, @intCast(y), 0, draw.Color(.RED));
+        matrix.setPixel(1, @intCast(y), (game.state - 1), draw.Color(.RED));
+        matrix.setPixel(6, @intCast(y), (game.state - 1), draw.Color(.RED));
     }
 }
 
 fn loadStateBox(game: Cyclone, win: bool, lose: bool) void {
     if (win) {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state)), draw.Color(.GREEN));
+        draw.box(3, 3, 0, 2, 2, @intCast(game.state), draw.Color(.GREEN));
     } else if (lose) {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state)), draw.Color(.RED));
+        draw.box(3, 3, 0, 2, 2, @intCast(game.state), draw.Color(.RED));
     } else {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state)), draw.Color(.BLUE));
+        draw.box(3, 3, 0, 2, 2, @intCast(game.state), draw.Color(.BLUE));
     }
 }
 
 fn checkClick(game: Cyclone) bool {
     var result: bool = false;
-    if (game.state == 1) {
+    if (game.state == 1 or game.state == 2) {
         result = (game.x >= 2) and (game.x <= 5) and (game.y == 0);
     } else {
         result = (game.x >= 3) and (game.x <= 4) and (game.y == 0);
@@ -104,6 +107,7 @@ fn appMain() callconv(.C) void {
 
     // struct variable managing state of the game
     var game: Cyclone = .{};
+    var saves: [8]Cyclone = [_]Cyclone{.{}} ** 8;
 
     // dt struct is usded for keeping tract of time between frames
     var dt: deltaTime.DeltaTime = .{};
@@ -171,7 +175,7 @@ fn appMain() callconv(.C) void {
             if (button.pressed() and !game.showing_placement) {
                 game.showing_placement = true;
                 // rng like in the real world :eyes:
-                if (game.state == 4 and checkClick(game)) {
+                if (game.state == 8 and checkClick(game)) {
                     if (rand.intRangeAtMost(i32, 0, 1) != 0) {
                         if (game.x == 3) {
                             game.x -= 1;
@@ -181,7 +185,8 @@ fn appMain() callconv(.C) void {
                     }
                 }
                 if (checkClick(game)) {
-                    if (game.state == 4) {
+                    saves[@intCast(game.state - 1)] = game;
+                    if (game.state == 8) {
                         win = true;
                     }
                 } else {
@@ -219,8 +224,12 @@ fn appMain() callconv(.C) void {
                 }
             }
 
+            for (0..@intCast(game.state - 1)) |i| {
+                loadInnerRing(saves[i]);
+                matrix.setPixel(saves[i].x, saves[i].y, i, draw.Color(.YELLOW));
+            }
             loadInnerRing(game);
-            matrix.setPixel(game.x, game.y, 0, draw.Color(.YELLOW));
+            matrix.setPixel(game.x, game.y, (game.state - 1), draw.Color(.YELLOW));
             loadStateBox(game, win, lose);
 
             if (restart.pressed()) {
