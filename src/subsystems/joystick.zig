@@ -30,7 +30,7 @@ pub fn joystick_init() void {
 }
 
 // on-press events
-pub fn button_pressed() bool {
+pub fn button_pressed() callconv(.C) bool {
     const dummy_cur = cur_button_pressed;
     const dummy_prev = prev_button_pressed;
 
@@ -42,7 +42,7 @@ pub fn button_pressed() bool {
     return (dummy_cur and !dummy_prev);
 }
 
-pub fn moved_up() bool {
+pub fn moved_up() callconv(.C) bool {
     const dummy_cur = cur_up;
     const dummy_prev = prev_up;
 
@@ -54,7 +54,7 @@ pub fn moved_up() bool {
     return (dummy_cur and !dummy_prev);
 }
 
-pub fn moved_down() bool {
+pub fn moved_down() callconv(.C) bool {
     const dummy_cur = cur_down;
     const dummy_prev = prev_down;
 
@@ -66,7 +66,7 @@ pub fn moved_down() bool {
     return (dummy_cur and !dummy_prev);
 }
 
-pub fn moved_right() bool {
+pub fn moved_right() callconv(.C) bool {
     const dummy_cur = cur_right;
     const dummy_prev = prev_right;
 
@@ -78,7 +78,7 @@ pub fn moved_right() bool {
     return (dummy_cur and !dummy_prev);
 }
 
-pub fn moved_left() bool {
+pub fn moved_left() callconv(.C) bool {
     const dummy_cur = cur_left;
     const dummy_prev = prev_left;
 
