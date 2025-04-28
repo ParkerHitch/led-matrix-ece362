@@ -179,8 +179,8 @@ pub fn FpVector(scalarType: type) type {
         const This = @This();
 
         /// Returns a new vector that is the result of scalar multiplication
-        pub fn mulFp(a: This, b: anytype) This {
-            .{
+        pub fn mul(a: This, b: anytype) This {
+            return .{
                 .x = a.x.mul(b),
                 .y = a.y.mul(b),
                 .z = a.z.mul(b),
@@ -195,6 +195,22 @@ pub fn FpVector(scalarType: type) type {
                 .y = a.y.add(b.y),
                 .z = a.z.add(b.z),
             };
+        }
+
+        pub fn sub(a: This, b: anytype) This {
+            return .{
+                .x = a.x.sub(b.x),
+                .y = a.y.sub(b.y),
+                .z = a.z.sub(b.z),
+            };
+        }
+
+        pub fn mag2(a: This) scalarType {
+            return a.x.mul(a.x).add(a.y.mul(a.y)).add(a.z.mul(a.z));
+        }
+
+        pub fn mag(a: This) scalarType {
+            return a.mag2().sqrt();
         }
 
         pub fn zero() This {

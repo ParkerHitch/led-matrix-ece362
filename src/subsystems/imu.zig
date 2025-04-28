@@ -11,11 +11,11 @@ const UartDebug = @import("../util/uartDebug.zig");
 const DeltaTime = @import("deltaTime.zig");
 const fp = @import("../util/fixedPoint.zig");
 
-const AngleFpInt = fp.FixedPoint(16, 16, .signed);
-const AccelFpInt = fp.FixedPoint(8, 24, .signed);
-const AngleVec = fp.FpVector(AngleFpInt);
-const AngleRotor = fp.FpRotor(AngleFpInt);
-const AccelVec = fp.FpVector(AccelFpInt);
+pub const AngleFpInt = fp.FixedPoint(16, 16, .signed);
+pub const AccelFpInt = fp.FixedPoint(8, 24, .signed);
+pub const AngleVec = fp.FpVector(AngleFpInt);
+pub const AngleRotor = fp.FpRotor(AngleFpInt);
+pub const AccelVec = fp.FpVector(AccelFpInt);
 
 // Sample rate for the IMU in Hz.
 // 1k should be divisible by this number
@@ -38,6 +38,7 @@ const TEMP_LSB_TO_DegC = AccelFpInt.fromFloat(1.0 / 326.8);
 // The current angles are the ones required to get from facing "forward" in the world reference frame
 //      to what is currently "forward" for our sensor
 var orientation: AngleRotor = AngleRotor.identity();
+var orZero: AngleRotor = AngleRotor.identity();
 var dt = DeltaTime.DeltaTime{};
 
 // Higher = more correction from gravity
@@ -107,6 +108,14 @@ pub fn updateOrientation() void {
 
     UartDebug.printIfDebug("Ornt: ", .{}) catch {};
     orientation.prettyPrint(UartDebug.writer, 5) catch {};
+}
+
+pub fn zeroOrientation() void {
+    orZero = orientation;
+}
+
+pub fn getZeroedOrientation() AngleRotor {
+    return orientation.mulRotor(orZero.conjugate());
 }
 
 pub fn init() void {

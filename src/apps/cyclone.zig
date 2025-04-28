@@ -226,7 +226,7 @@ fn appMain() callconv(.C) void {
 
             for (0..@intCast(game.state - 1)) |i| {
                 loadInnerRing(saves[i]);
-                matrix.setPixel(saves[i].x, saves[i].y, i, draw.Color(.YELLOW));
+                matrix.setPixel(saves[i].x, saves[i].y, @intCast(i), draw.Color(.YELLOW));
             }
             loadInnerRing(game);
             matrix.setPixel(game.x, game.y, (game.state - 1), draw.Color(.YELLOW));
