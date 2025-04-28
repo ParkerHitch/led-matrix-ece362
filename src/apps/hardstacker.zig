@@ -27,7 +27,7 @@ const restart = @import("../subsystems/button_b.zig");
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "Stacker (Hard)",
+    .name = "Stacker (Easy)",
     .authorfirst = "Richard",
     .authorlast = "Ye",
 };

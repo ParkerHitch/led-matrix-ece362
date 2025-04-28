@@ -53,14 +53,14 @@ const Cyclone = struct {
 fn loadInnerRing(game: Cyclone) void {
     for (1..7) |x| {
         matrix.setPixel(@intCast(x), 6, 0, draw.Color(.RED));
-        if (game.state == 1 or game.state == 2) {
+        if (game.state == 1) {
             if (x >= 2 and x <= 5) {
                 matrix.setPixel(@intCast(x), 1, 0, draw.Color(.GREEN));
             } else {
                 matrix.setPixel(@intCast(x), 1, 0, draw.Color(.RED));
             }
         } else {
-            if (x >= 3 and x <= 4) {
+            if (x >= 2 and x <= 4) {
                 matrix.setPixel(@intCast(x), 1, 0, draw.Color(.GREEN));
             } else {
                 matrix.setPixel(@intCast(x), 1, 0, draw.Color(.RED));
@@ -75,17 +75,17 @@ fn loadInnerRing(game: Cyclone) void {
 
 fn loadStateBox(game: Cyclone, win: bool, lose: bool) void {
     if (win) {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), draw.Color(.GREEN));
+        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state)), draw.Color(.GREEN));
     } else if (lose) {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), draw.Color(.RED));
+        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state)), draw.Color(.RED));
     } else {
-        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state - 1)), draw.Color(.BLUE));
+        draw.box(3, 3, 0, 2, 2, @intCast(2 * (game.state)), draw.Color(.BLUE));
     }
 }
 
 fn checkClick(game: Cyclone) bool {
     var result: bool = false;
-    if (game.state == 1 or game.state == 2) {
+    if (game.state == 1) {
         result = (game.x >= 2) and (game.x <= 5) and (game.y == 0);
     } else {
         result = (game.x >= 3) and (game.x <= 4) and (game.y == 0);
@@ -110,7 +110,7 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 30; // i.e. target fps or update rate
+    const tickRate: u32 = 60; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
@@ -124,6 +124,7 @@ fn appMain() callconv(.C) void {
     // manages update speed
     var tickcount: i32 = 0;
     var waitcount: i32 = 0;
+    var movement: i32 = 0;
 
     // gamestate variables
     var win: bool = false;
@@ -157,12 +158,12 @@ fn appMain() callconv(.C) void {
                     game.state += 1;
                     if (game.state == 1 or game.state == 2) {
                         game.x = 6;
-                        game.xVel = 0;
+                        game.xVel = 1;
                         game.y = 0;
                         game.yVel = 0;
                     } else {
                         game.x = 5;
-                        game.xVel = 0;
+                        game.xVel = 1;
                         game.y = 0;
                         game.yVel = 0;
                     }
@@ -201,18 +202,22 @@ fn appMain() callconv(.C) void {
                 }
 
                 // collision detection & resolution
-                if (game.x >= matrix.upperBound) {
+                if (game.x >= matrix.upperBound and movement == 0) {
                     game.xVel = 0;
                     game.yVel = 1;
-                } else if (game.y >= matrix.upperBound) {
+                    movement = 1;
+                } else if (game.y >= matrix.upperBound and movement == 1) {
                     game.xVel = -1;
                     game.yVel = 0;
-                } else if (game.x <= matrix.lowerBound) {
+                    movement = 2;
+                } else if (game.x <= matrix.lowerBound and movement == 2) {
                     game.xVel = 0;
                     game.yVel = -1;
-                } else if (game.y <= matrix.lowerBound) {
+                    movement = 3;
+                } else if (game.y <= matrix.lowerBound and movement == 3) {
                     game.xVel = 1;
                     game.yVel = 0;
+                    movement = 0;
                 }
             }
 
@@ -228,6 +233,7 @@ fn appMain() callconv(.C) void {
                 lose = false;
                 tickcount = 0;
                 waitcount = 0;
+                movement = 0;
             }
 
             matrix.render();

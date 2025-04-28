@@ -87,7 +87,7 @@ fn appMain() callconv(.C) void {
     dt.start();
 
     // time keeping vairiables to limit tickRate
-    const tickRate: u32 = 30; // i.e. target fps or update rate
+    const tickRate: u32 = 60; // i.e. target fps or update rate
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
@@ -101,6 +101,7 @@ fn appMain() callconv(.C) void {
     // manages update speed
     var tickcount: i32 = 0;
     var waitcount: i32 = 0;
+    var movement: i32 = 0;
 
     // gamestate variables
     var win: bool = false;
@@ -150,7 +151,7 @@ fn appMain() callconv(.C) void {
                 game.showing_placement = true;
                 // rng like in the real world :eyes:
                 if (game.state == 4 and checkClick(game)) {
-                    if (rand.intRangeAtMost(i32, 0, 99) != 0) {
+                    if (rand.intRangeAtMost(i32, 0, 9) != 0) {
                         if (game.x == 3) {
                             game.x -= 1;
                         } else if (game.x == 4) {
@@ -176,18 +177,22 @@ fn appMain() callconv(.C) void {
                 }
 
                 // collision detection & resolution
-                if (game.x >= matrix.upperBound) {
+                if (game.x >= matrix.upperBound and movement == 0) {
                     game.xVel = 0;
                     game.yVel = 1;
-                } else if (game.y >= matrix.upperBound) {
+                    movement = 1;
+                } else if (game.y >= matrix.upperBound and movement == 1) {
                     game.xVel = -1;
                     game.yVel = 0;
-                } else if (game.x <= matrix.lowerBound) {
+                    movement = 2;
+                } else if (game.x <= matrix.lowerBound and movement == 2) {
                     game.xVel = 0;
                     game.yVel = -1;
-                } else if (game.y <= matrix.lowerBound) {
+                    movement = 3;
+                } else if (game.y <= matrix.lowerBound and movement == 3) {
                     game.xVel = 1;
                     game.yVel = 0;
+                    movement = 0;
                 }
             }
 
@@ -205,6 +210,7 @@ fn appMain() callconv(.C) void {
                 lose = false;
                 tickcount = 0;
                 waitcount = 0;
+                movement = 0;
             }
 
             matrix.render();
