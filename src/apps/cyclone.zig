@@ -55,7 +55,7 @@ const Cyclone = struct {
 
 fn loadInnerRing(game: Cyclone) void {
     for (1..7) |x| {
-        matrix.setPixel(@intCast(x), 6, 0, draw.Color(.RED));
+        matrix.setPixel(@intCast(x), 6, (game.state - 1), draw.Color(.RED));
         if (game.state == 1 or game.state == 2) {
             if (x >= 2 and x <= 5) {
                 matrix.setPixel(@intCast(x), 1, (game.state - 1), draw.Color(.GREEN));
