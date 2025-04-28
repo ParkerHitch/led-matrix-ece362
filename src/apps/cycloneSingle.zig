@@ -117,7 +117,6 @@ fn appMain() callconv(.C) void {
         // and limit the framefrate to a max value determined by tickRate
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
-            joystick.joystick_update();
             timeSinceUpdate = 0;
 
             // draw to the display

@@ -42,7 +42,6 @@ fn appMain() callconv(.C) void {
         state.timeSinceUpdate = 0;
 
         // user input handling
-        joystick.joystick_update();
         state.appRunning = !joystick.button_pressed();
 
         if (joystick.moved_up() and snake.headDir != .BACK) {
