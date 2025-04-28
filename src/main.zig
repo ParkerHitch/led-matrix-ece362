@@ -10,6 +10,7 @@ const Debounce = @import("subsystems/debounce.zig");
 const Draw = @import("subsystems/draw.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
+const imu = @import("subsystems/imu.zig");
 const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 const UartDebug = @import("util/uartDebug.zig");
@@ -51,6 +52,7 @@ pub fn main() void {
     cImport.init_button_a();
     cImport.init_button_b();
     cImport.init_debounce();
+    imu.init();
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
