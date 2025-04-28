@@ -127,7 +127,6 @@ fn appMain() callconv(.C) void {
     // TODO: replace true in while true with joystick press exit condition
     while (appRunning) {
         // checking for exit condition
-        joystick.joystick_update();
         appRunning = !joystick.button_pressed();
 
         // checking for button press

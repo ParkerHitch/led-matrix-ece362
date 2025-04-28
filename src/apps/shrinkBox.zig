@@ -48,7 +48,6 @@ fn appMain() callconv(.C) void {
         // NOTE: There are other ways to use dt for keeping track of render time.
         // This method will lock your update logic to the framerate of the display,
         // and limit the framefrate to a max value determined by tickRate
-        joystick.joystick_update();
         appRunning = !joystick.button_pressed();
 
         timeSinceUpdate += dt.milli();

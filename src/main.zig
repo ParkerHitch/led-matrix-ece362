@@ -6,7 +6,7 @@ const Joystick: type = @import("subsystems/joystick.zig");
 const deltaTime = @import("subsystems/deltaTime.zig");
 const Button_A: type = @import("subsystems/button_a.zig");
 const Button_B = @import("subsystems/button_b.zig");
-const Debounce = @import("init/debounce.zig");
+const Debounce = @import("subsystems/debounce.zig");
 const Draw = @import("subsystems/draw.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
@@ -20,7 +20,7 @@ const ChipInit = @import("init/general.zig");
 // Make sure everything gets exported
 comptime {
     _ = @import("cExport.zig");
-    _ = @import("init/debounce.zig");
+    _ = @import("subsystems/debounce.zig");
 }
 
 pub const microzig_options = .{
@@ -60,7 +60,6 @@ pub fn main() void {
     // testAppMain();
 
     while (true) {
-        Joystick.joystick_update();
         // UartDebug.printIfDebug("Joystick X = {}, Joystick Y = {}\n", .{ Joystick.voltVec[0], Joystick.voltVec[1] }) catch {};
 
         if (RUNNING_APP == 1) {

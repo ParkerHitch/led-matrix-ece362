@@ -102,7 +102,6 @@ fn appMain() callconv(.C) void {
             continue;
         }
 
-        joystick.joystick_update();
         state.timeSinceUpdate = 0;
         state.appRunning = !joystick.button_pressed();
 

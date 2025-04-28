@@ -40,7 +40,6 @@ fn renderFireworks() callconv(.C) void {
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
 
-            joystick.joystick_update();
             appRunning = !joystick.button_pressed();
 
             matrix.clearFrame(draw.Color(.BLACK));

@@ -77,7 +77,6 @@ fn appMain() callconv(.C) void {
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
 
-            joystick.joystick_init();
             appRunning = !joystick.button_pressed();
 
             matrix.clearFrame(draw.Color(.BLACK));

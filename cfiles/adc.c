@@ -1,7 +1,8 @@
 #include "stm32f0xx.h"
+#include "stm32f091xc.h"
 #include <stdint.h>
 
-void setup_adc(uint32_t (*outVecAddr)[2])
+void init_adc(uint32_t(*outVecAddr)[2])
 {
 
     RCC->AHBENR |= RCC_AHBENR_GPIOCEN;

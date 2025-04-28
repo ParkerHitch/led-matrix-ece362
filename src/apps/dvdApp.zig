@@ -35,7 +35,6 @@ fn appMain() callconv(.C) void {
     var appRunning: bool = true;
 
     while (appRunning) {
-        joystick.joystick_update();
         appRunning = !joystick.button_pressed();
 
         timeSinceUpdate += dt.milli();

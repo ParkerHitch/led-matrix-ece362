@@ -29,7 +29,6 @@ fn appMain() callconv(.C) void {
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0.0;
 
-            joystick.joystick_update();
             appRunning = !joystick.button_pressed();
 
             drawIdx = if (drawIdx >= 7) 0 else drawIdx + 1;

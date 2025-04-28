@@ -17,7 +17,6 @@ fn render() callconv(.C) void {
 
     while (appRunning) {
         // get input
-        joystick.joystick_update();
         appRunning = !joystick.button_pressed();
 
         matrix.clearFrame(.{ .r = 0, .g = 0, .b = 0 });

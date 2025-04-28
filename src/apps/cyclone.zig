@@ -134,7 +134,6 @@ fn appMain() callconv(.C) void {
     while (appRunning) {
 
         // checking for exit condition
-        joystick.joystick_update();
         appRunning = !joystick.button_pressed();
         // NOTE: There are other ways to use dt for keeping track of render time.
         // This method will lock your update logic to the framerate of the display,
