@@ -60,7 +60,7 @@ fn loadInnerRing(game: Cyclone) void {
                 matrix.setPixel(@intCast(x), 1, 0, draw.Color(.RED));
             }
         } else {
-            if (x >= 2 and x <= 4) {
+            if (x >= 3 and x <= 4) {
                 matrix.setPixel(@intCast(x), 1, 0, draw.Color(.GREEN));
             } else {
                 matrix.setPixel(@intCast(x), 1, 0, draw.Color(.RED));

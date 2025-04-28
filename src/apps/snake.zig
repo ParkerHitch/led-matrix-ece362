@@ -10,7 +10,7 @@ const buttonB = @import("../subsystems/button_b.zig");
 const UartDebug = @import("../util/uartDebug.zig");
 const Vec3 = @import("../subsystems/vec3.zig").Vec3;
 
-const maxSnakeSize = 16; // NOTE: win condition is to reach max snake size
+const maxSnakeSize = 32; // NOTE: win condition is to reach max snake size
 
 pub const app: Application = .{
     .renderFn = &appMain,
