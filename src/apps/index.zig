@@ -18,6 +18,7 @@ pub const zigApps = [_]*const Application{
     &@import("cycloneSingle.zig").app,
     &@import("cvm.zig").app,
     &@import("bamTest.zig").app,
+    &@import("gamecube.zig").app,
 };
 
 // comptime {
