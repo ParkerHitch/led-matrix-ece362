@@ -123,7 +123,7 @@ pub fn FixedPoint(integer_size: comptime_int, fraction_size: comptime_int, signd
             if (b_type == This) {
                 return a.raw > b.raw;
             } else if (b_type_info == .Int or b_type == comptime_int) {
-                @compileError("Not implemented yet");
+                return a.fp.integer > b;
             } else if (b_type_info == .Union and @hasField(b_type, "fp") and @hasDecl(b_type, "fraction_bits")) {
                 @compileError("Not implemented yet");
             } else {

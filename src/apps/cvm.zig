@@ -37,6 +37,8 @@ const greenBallC = Vec{
 const greenBallR2 = FpInt.fromFloat(math.pow(f32, 2.0, 2.0));
 
 fn render() callconv(.C) void {
+    imu.restartOrientation();
+
     while (true) {
         // Inputs
         if (joystick.button_pressed()) {

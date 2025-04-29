@@ -110,6 +110,22 @@ pub fn updateOrientation() void {
     orientation.prettyPrint(UartDebug.writer, 5) catch {};
 }
 
+pub fn restartOrientation() void {
+    updateInstantaneousVals();
+    while (!accel.z.gt(0)) {
+        updateInstantaneousVals();
+        c.nano_wait(100_000);
+    }
+    // Z gt 0
+    orientation = AngleRotor{
+        .scalar = (accel.z.add(1).div(2).sqrt() catch unreachable).toFp(AngleFpInt),
+        .yz = accel.y.div(accel.z.add(1).mul(2).sqrt() catch unreachable).toFp(AngleFpInt),
+        .zx = accel.x.div(accel.z.add(1).mul(2).sqrt() catch unreachable).mul(-1).toFp(AngleFpInt),
+        .xy = .{ .raw = 0 },
+    };
+    dt.start();
+}
+
 pub fn zeroOrientation() void {
     orZero = orientation;
 }
