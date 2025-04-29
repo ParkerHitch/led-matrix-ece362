@@ -6,7 +6,9 @@
 ///     pin A0 & A1 for SCLK input & LE respectively
 const microzig = @import("microzig");
 const std = @import("std");
+const math = std.math;
 const cImport = @import("../cImport.zig");
+const UartdDebug = @import("../util/uartDebug.zig");
 const cmsis = cImport.cmsis;
 const peripherals = microzig.chip.peripherals;
 const periph_types = microzig.chip.types.peripherals;
@@ -18,9 +20,22 @@ const GPIOA = peripherals.GPIOA;
 const GPIOB = peripherals.GPIOB;
 const GPIOC = peripherals.GPIOC;
 const TIM2 = peripherals.TIM2;
+const TIM15 = peripherals.TIM15;
 
 pub const upperBound: comptime_int = 7;
 pub const lowerBound: comptime_int = 0;
+
+pub const BAM_bits = 3;
+// Max time that it should take to do every BAM phase (MSB, ..., LSB)
+// Sum of time spent on all bits will be about equal to this, but stuff can go wrong so build in some safety here.
+pub const BAM_max_time: comptime_float = 1.0 / 80.0;
+pub const BAM_lsb_time = BAM_max_time / @as(comptime_float, (1 << BAM_bits - 1.0));
+pub const BAM_lsb_time_us: usize = @floor(BAM_lsb_time * 1_000_000);
+comptime {
+    // Time to shift out stuff + a safety factor of 10%
+    std.debug.assert(BAM_lsb_time > (1.0 / 4_000_000.0) * 200 * 1.1);
+    std.debug.assert(BAM_lsb_time_us << (BAM_bits - 1) <= math.maxInt(u16));
+}
 
 // Frame buffers for rendering
 var frameBuff1: FrameBuffer = .{};
@@ -50,6 +65,9 @@ pub fn init(sysclock_divisor: periph_types.spi_v2.BR) void {
     });
     RCC.APB1ENR.modify(.{
         .TIM2EN = 1,
+    });
+    RCC.APB2ENR.modify(.{
+        .TIM15EN = 1,
     });
     RCC.APB2ENR.modify(.{
         .SPI1EN = 1,
@@ -124,6 +142,18 @@ pub fn init(sysclock_divisor: periph_types.spi_v2.BR) void {
     TIM2.CR1.modify(.{
         .CEN = 1,
     });
+
+    // TIM15 (for BAM)
+    // 48 Mhz to us = 48
+    TIM15.PSC = 48 - 1;
+    TIM15.CR1.modify(.{
+        .OPM = 1,
+        .CEN = 0,
+    });
+    TIM15.DIER.modify(.{
+        .UIE = 1,
+    });
+    cmsis.NVIC.*.ISER[0] |= @as(u32, 1 << cmsis.TIM15_IRQn);
 
     // Setup DMA
     // Configure to respond to SPI requests only
@@ -290,6 +320,119 @@ pub fn setPixel(x: i32, y: i32, z: i32, color: Led) void {
 pub fn render() callconv(.C) void {
     startShift(drawBuff);
     drawBuff = if (drawBuff == &frameBuff1) &frameBuff2 else &frameBuff1;
+}
+
+const BamBitInd = std.math.IntFittingRange(0, BAM_bits - 1);
+var BAM_buff1 = BAM_buff{};
+var BAM_buff2 = BAM_buff{};
+var BAM_renderBuff = &BAM_buff1;
+var BAM_drawBuff = &BAM_buff2;
+
+var BAM_currentBitRaw: BamBitInd = 0;
+var BAM_frameSwitchPendingRaw: bool = false;
+var BAM_stopPendingRaw: bool = false;
+const BAM_currentBit: *volatile BamBitInd = @volatileCast(&BAM_currentBitRaw);
+const BAM_frameSwitchPending: *volatile bool = @volatileCast(&BAM_frameSwitchPendingRaw);
+const BAM_stopPending: *volatile bool = @volatileCast(&BAM_stopPendingRaw);
+
+pub const BAM_int = std.meta.Int(.unsigned, BAM_bits);
+
+pub const BAM_color = struct {
+    r: BAM_int,
+    g: BAM_int,
+    b: BAM_int,
+};
+
+pub const BAM_buff = struct {
+    levels: [BAM_bits]FrameBuffer = .{FrameBuffer{}} ** BAM_bits,
+
+    pub fn set_pixel(self: *BAM_buff, x: u3, y: u3, z: u3, value: BAM_color) void {
+        for (0..BAM_bits) |i_| {
+            const i: BamBitInd = @intCast(i_);
+            self.levels[i].set_pixel(x, y, z, Led{
+                .r = @intCast((value.r >> i) & 0b1),
+                .g = @intCast((value.g >> i) & 0b1),
+                .b = @intCast((value.b >> i) & 0b1),
+            });
+        }
+    }
+};
+
+pub fn enableBAM() void {
+    BAM_currentBit.* = 0;
+    TIM15_IRQ();
+}
+
+pub fn disableBAM() void {
+    BAM_stopPending.* = true;
+    while (BAM_stopPending.*) {
+        asm volatile ("wfi");
+    }
+}
+
+pub fn setPixelBAM(x: i32, y: i32, z: i32, color: BAM_color) void {
+    BAM_drawBuff.set_pixel(@intCast(x), @intCast(y), @intCast(z), color);
+}
+
+pub fn clearFrameBAM(color: BAM_color) void {
+    _ = color;
+}
+
+pub fn renderBAM() void {
+    BAM_frameSwitchPending.* = true;
+    while (BAM_frameSwitchPending.*) {
+        asm volatile ("nop");
+    }
+}
+
+pub export fn TIM15_IRQ() callconv(.C) void {
+    TIM15.SR.modify(.{ .UIF = 0 });
+    // UartdDebug.printIfDebug("Tim15 hit. Current bit: {}\n", .{BAM_currentBit.*}) catch {};
+    std.debug.assert(TIM15.CR1.read().CEN == 0);
+    if (BAM_currentBit.* == BAM_bits - 1) {
+        BAM_currentBit.* = 0;
+        if (BAM_frameSwitchPending.*) {
+            const temp = BAM_renderBuff;
+            BAM_renderBuff = BAM_drawBuff;
+            BAM_drawBuff = temp;
+            BAM_frameSwitchPending.* = false;
+        }
+    } else {
+        BAM_currentBit.* += 1;
+    }
+    DMA2_CH4.CR.modify(.{
+        .EN = 0,
+    });
+    TIM2.CR1.modify(.{
+        .CEN = 0,
+    });
+
+    while (SPI1.SR.read().BSY == 1) {}
+    if (BAM_stopPending.*) {
+        BAM_stopPending.* = false;
+        return;
+    }
+
+    DMA2_CH4.MAR = @intFromPtr(&BAM_renderBuff.levels[BAM_currentBit.*]);
+    DMA2_CH4.NDTR.modify(.{
+        .NDT = @sizeOf(FrameBuffer),
+    });
+    TIM2.CNT = 0;
+    TIM2.CR1.modify(.{
+        .CEN = 1,
+    });
+    DMA2_CH4.CR.modify(.{
+        .EN = 1,
+    });
+
+    TIM15.CNT = @bitCast(@as(u32, 0));
+    TIM15.ARR = @bitCast(BAM_lsb_time_us << BAM_currentBit.*);
+    TIM15.DIER.modify(.{
+        .UIE = 1,
+    });
+    TIM15.CR1.modify(.{
+        .CEN = 1,
+    });
 }
 
 // Way harder to put this inside a test block, as those need to run on the machine, which is the microcontroller

@@ -28,6 +28,7 @@ pub const microzig_options = .{
     .interrupts = .{
         .DMA1_Ch4_7_DMA2_Ch3_5 = microzig.interrupt.Handler{ .C = LedMatrix.IRQ_DMA1_Ch4_7_DMA2_Ch3_5 },
         .TIM14 = microzig.interrupt.Handler{ .C = Debounce.TIM14_IRQHandler },
+        .TIM15 = microzig.interrupt.Handler{ .C = LedMatrix.TIM15_IRQ },
     },
 };
 
