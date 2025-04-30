@@ -136,8 +136,8 @@ pub fn is_in_range(dir: JoystickDirEnum) bool {
     return switch (dir) {
         .BUTTON => false,
         .LEFT => voltVec[0] < 500,
-        .RIGHT => voltVec[0] > 3547,
-        .UP => voltVec[1] > 3547,
+        .RIGHT => voltVec[0] > 3400,
+        .UP => voltVec[1] > 3400,
         .DOWN => voltVec[1] < 500,
     };
 }
