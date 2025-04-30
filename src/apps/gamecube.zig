@@ -46,6 +46,7 @@ fn appMain() callconv(.C) void {
     var drawIdx: u3 = 4;
     var prevDrawIdx: u3 = 7;
 
+    // clear to get rid of previous animation
     matrix.clearFrame(draw.Color(.BLACK));
 
     // TODO: replace true in while true with joystick press exit condition

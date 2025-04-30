@@ -605,7 +605,7 @@ void reload_menu(const char* MENU, const Application* const* APPLIST)
         LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
         if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
         {
-            i = i + 7;
+            i = find_start + 7;
         }
     }
     update_display();
@@ -627,7 +627,7 @@ void shift_screen(int dir, const Application* const* APPLIST)
             LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
             if ((i % 7) == 0) // ends loading when reaching top of last bit of apps
             {
-                i = i - 7;
+                i = APP_NUM - 7;
             }
         }
     }
@@ -639,7 +639,7 @@ void shift_screen(int dir, const Application* const* APPLIST)
             LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
             if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
             {
-                i = i + 7;
+                i = APP_NUM + 7;
             }
         }
     }
