@@ -36,8 +36,10 @@
         "build.zig",
         "build.zig.zon",
         "src",
-        // For example...
-        //"LICENSE",
-        //"README.md",
+        "cfiles",
+        "asmfiles",
+        "include",
+        "LICENSE",
+        "README.md",
     },
 }

@@ -9,3 +9,4 @@ compile_commands.json
 
 # editor stuff
 .vscode/
+.editorconfig
