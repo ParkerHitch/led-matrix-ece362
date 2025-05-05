@@ -13,7 +13,7 @@ This codebase features the drivers required to interact with peripherals and num
 
 ## Media
 
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/s9UKBCaMb90?si=TG7uzqiGFMwSFAaW" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+https://github.com/user-attachments/assets/8b256a77-d5e7-4344-ab03-db80d9f11f41
 
 *Showcase Video*
 
