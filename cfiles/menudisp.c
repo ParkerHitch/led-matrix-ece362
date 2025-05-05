@@ -16,7 +16,7 @@ int RUNNING_APP = 0; // 0 = on menu, 1 = running app
 //char * MENU = "Select App:"; // text for menu
 
 // A 16x26 font, used for writing text
-static const uint16_t asc2_2616 [95][26] = {
+static const uint16_t asc2_2616[95][26] = {
     {0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000}, // Ascii = [ ]
     {0x03E0,0x03E0,0x03E0,0x03E0,0x03E0,0x03E0,0x03E0,0x03E0,0x03C0,0x03C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x0000,0x0000,0x0000,0x03E0,0x03E0,0x03E0,0x0000,0x0000,0x0000,0x0000,0x0000}, // Ascii = [!]
     {0x1E3C,0x1E3C,0x1E3C,0x1E3C,0x1E3C,0x1E3C,0x1E3C,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000}, // Ascii = ["]
@@ -112,7 +112,7 @@ static const uint16_t asc2_2616 [95][26] = {
     {0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x01C0,0x0000}, // Ascii = [|]
     {0x3FC0,0x03E0,0x01E0,0x01E0,0x01E0,0x01E0,0x01C0,0x03C0,0x03C0,0x01C0,0x01E0,0x00FE,0x00FE,0x01E0,0x01C0,0x03C0,0x03C0,0x01C0,0x01E0,0x01E0,0x01E0,0x01E0,0x03E0,0x3FC0,0x3F00,0x0000}, // Ascii = [}]
     {0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x3F07,0x7FC7,0x73E7,0xF1FF,0xF07E,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000}, // Ascii = [~]
-    };
+};
 
 void LCD_WriteReg(uint8_t LCD_Reg, uint16_t LCD_RegValue)
 {
@@ -123,29 +123,29 @@ void LCD_WriteReg(uint8_t LCD_Reg, uint16_t LCD_RegValue)
 // i didn't know this existed before doing all the font manuevering/rotating imma kms
 void LCD_direction(u8 direction)
 {
-    lcddev.setxcmd=0x2A;
-    lcddev.setycmd=0x2B;
-    lcddev.wramcmd=0x2C;
-    switch(direction){
+    lcddev.setxcmd = 0x2A;
+    lcddev.setycmd = 0x2B;
+    lcddev.wramcmd = 0x2C;
+    switch (direction) {
     case 0:
-        lcddev.width=LCD_W;
-        lcddev.height=LCD_H;
-        LCD_WriteReg(0x36,(1<<3)|(0<<6)|(0<<7));//BGR==1,MY==0,MX==0,MV==0
+        lcddev.width = LCD_W;
+        lcddev.height = LCD_H;
+        LCD_WriteReg(0x36, (1 << 3) | (0 << 6) | (0 << 7));//BGR==1,MY==0,MX==0,MV==0
         break;
     case 1:
-        lcddev.width=LCD_H;
-        lcddev.height=LCD_W;
-        LCD_WriteReg(0x36,(1<<3)|(0<<7)|(1<<6)|(1<<5));//BGR==1,MY==1,MX==0,MV==1
+        lcddev.width = LCD_H;
+        lcddev.height = LCD_W;
+        LCD_WriteReg(0x36, (1 << 3) | (0 << 7) | (1 << 6) | (1 << 5));//BGR==1,MY==1,MX==0,MV==1
         break;
     case 2:
-        lcddev.width=LCD_W;
-        lcddev.height=LCD_H;
-        LCD_WriteReg(0x36,(1<<3)|(1<<6)|(1<<7));//BGR==1,MY==0,MX==0,MV==0
+        lcddev.width = LCD_W;
+        lcddev.height = LCD_H;
+        LCD_WriteReg(0x36, (1 << 3) | (1 << 6) | (1 << 7));//BGR==1,MY==0,MX==0,MV==0
         break;
     case 3:
-        lcddev.width=LCD_H;
-        lcddev.height=LCD_W;
-        LCD_WriteReg(0x36,(1<<3)|(1<<7)|(1<<5));//BGR==1,MY==1,MX==0,MV==1
+        lcddev.width = LCD_H;
+        lcddev.height = LCD_W;
+        LCD_WriteReg(0x36, (1 << 3) | (1 << 7) | (1 << 5));//BGR==1,MY==1,MX==0,MV==1
         break;
     default:break;
     }
@@ -156,13 +156,14 @@ void LCD_direction(u8 direction)
 static void tft_select(int val)
 {
     if (val == 0) {
-        while(SPI2->SR & SPI_SR_BSY);
-        do { GPIOB->BSRR = GPIO_BSRR_BS_10; } while(0);
-    } else {
-        while((GPIOB->ODR & (1<<10)) == 0) {
+        while (SPI2->SR & SPI_SR_BSY);
+        do { GPIOB->BSRR = GPIO_BSRR_BS_10; } while (0);
+    }
+    else {
+        while ((GPIOB->ODR & (1 << 10)) == 0) {
             ;
         }
-        do { GPIOB->BSRR = GPIO_BSRR_BR_10; } while(0);
+        do { GPIOB->BSRR = GPIO_BSRR_BR_10; } while (0);
     }
 }
 
@@ -170,18 +171,20 @@ static void tft_select(int val)
 static void tft_reset(int val)
 {
     if (val) {
-        do { GPIOB->BSRR = GPIO_BSRR_BR_11; } while(0);
-    } else {
-        do { GPIOB->BSRR = GPIO_BSRR_BS_11; } while(0);
+        do { GPIOB->BSRR = GPIO_BSRR_BR_11; } while (0);
+    }
+    else {
+        do { GPIOB->BSRR = GPIO_BSRR_BS_11; } while (0);
     }
 }
 
 static void tft_reg_select(int val)
 {
     if (val == 1) { // select registers
-        do { GPIOB->BSRR = GPIO_BSRR_BR_12; } while(0); // clear
-    } else { // select data
-        do { GPIOB->BSRR = GPIO_BSRR_BS_12; } while(0); // set
+        do { GPIOB->BSRR = GPIO_BSRR_BR_12; } while (0); // clear
+    }
+    else { // select data
+        do { GPIOB->BSRR = GPIO_BSRR_BS_12; } while (0); // set
     }
 }
 
@@ -197,36 +200,36 @@ void LCD_Reset(void)
 // more lci setup for lcd
 void init_spi2_slow()
 {
-    RCC -> AHBENR |= RCC_AHBENR_GPIOBEN;
-    RCC -> APB1ENR |= RCC_APB1ENR_SPI2EN;
-    SPI2 -> CR1 &= ~(SPI_CR1_SPE);
-    GPIOB -> MODER |= 0xa8000000;
-    GPIOB -> AFR[1] &= ~(0xfff00000);
-    SPI2 -> CR1 |= 0x7 << 3;
-    SPI2 -> CR1 |= SPI_CR1_MSTR;
-    SPI2 -> CR2 |= 0x7 << 8;
-    SPI2 -> CR2 &= ~(0x8 << 8);
-    SPI2 -> CR1 |= SPI_CR1_SSM;
-    SPI2 -> CR1 |= SPI_CR1_SSI;
-    SPI2 -> CR2 |= SPI_CR2_FRXTH;
-    SPI2 -> CR1 |= SPI_CR1_SPE;
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+    RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
+    SPI2->CR1 &= ~(SPI_CR1_SPE);
+    GPIOB->MODER |= 0xa8000000;
+    GPIOB->AFR[1] &= ~(0xfff00000);
+    SPI2->CR1 |= 0x7 << 3;
+    SPI2->CR1 |= SPI_CR1_MSTR;
+    SPI2->CR2 |= 0x7 << 8;
+    SPI2->CR2 &= ~(0x8 << 8);
+    SPI2->CR1 |= SPI_CR1_SSM;
+    SPI2->CR1 |= SPI_CR1_SSI;
+    SPI2->CR2 |= SPI_CR2_FRXTH;
+    SPI2->CR1 |= SPI_CR1_SPE;
 }
 
 // more spi setup for lcd
 void sdcard_io_high_speed()
 {
-    SPI2 -> CR1 &= ~(SPI_CR1_SPE);
-    SPI2 -> CR1 &= ~(0x7 << 3);
-    SPI2 -> CR1 |= 0x1 << 3;
-    SPI2 -> CR1 |= SPI_CR1_SPE;
+    SPI2->CR1 &= ~(SPI_CR1_SPE);
+    SPI2->CR1 &= ~(0x7 << 3);
+    SPI2->CR1 |= 0x1 << 3;
+    SPI2->CR1 |= SPI_CR1_SPE;
 }
 
 // sets up spi for lcd
 void init_lcd_spi()
 {
-    RCC -> AHBENR |= RCC_AHBENR_GPIOBEN;
-    GPIOB -> MODER &= ~0x03f00000;
-    GPIOB -> MODER |= 0x01500000;
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+    GPIOB->MODER &= ~0x03f00000;
+    GPIOB->MODER |= 0x01500000;
     init_spi2_slow();
     sdcard_io_high_speed();
 }
@@ -242,7 +245,7 @@ void LCD_Setup() {
 
 void LCD_WR_REG(uint8_t data)
 {
-    while((SPI->SR & SPI_SR_BSY) != 0)
+    while ((SPI->SR & SPI_SR_BSY) != 0)
         ;
     // Don't clear RS until the previous operation is done.
     lcddev.reg_select(1);
@@ -252,7 +255,7 @@ void LCD_WR_REG(uint8_t data)
 // Write 8-bit data to the LCD
 void LCD_WR_DATA(uint8_t data)
 {
-    while((SPI->SR & SPI_SR_BSY) != 0)
+    while ((SPI->SR & SPI_SR_BSY) != 0)
         ;
     // Don't set RS until the previous operation is done.
     lcddev.reg_select(0);
@@ -311,6 +314,12 @@ void LCD_Init(void (*reset)(int), void (*select)(int), void (*reg_select)(int))
     LCD_WR_DATA(0x48);
     LCD_WR_REG(0x3A);
     LCD_WR_DATA(0x55);
+    LCD_WR_REG(0x53);    // Backlight Control
+    LCD_WR_DATA(0x24);
+    LCD_WR_REG(0x51);    // Brightness Control
+    LCD_WR_DATA(0xFF);
+    LCD_WR_REG(0xBF);    // BL EN
+    LCD_WR_DATA(0x04);
     LCD_WR_REG(0xB1);
     LCD_WR_DATA(0x00);
     LCD_WR_DATA(0x1B);   // 1A
@@ -376,16 +385,16 @@ void LCD_Init(void (*reset)(int), void (*select)(int), void (*reg_select)(int))
 void LCD_SetWindow(uint16_t xStart, uint16_t yStart, uint16_t xEnd, uint16_t yEnd)
 {
     LCD_WR_REG(lcddev.setxcmd);
-    LCD_WR_DATA(xStart>>8);
-    LCD_WR_DATA(0x00FF&xStart);
-    LCD_WR_DATA(xEnd>>8);
-    LCD_WR_DATA(0x00FF&xEnd);
+    LCD_WR_DATA(xStart >> 8);
+    LCD_WR_DATA(0x00FF & xStart);
+    LCD_WR_DATA(xEnd >> 8);
+    LCD_WR_DATA(0x00FF & xEnd);
 
     LCD_WR_REG(lcddev.setycmd);
-    LCD_WR_DATA(yStart>>8);
-    LCD_WR_DATA(0x00FF&yStart);
-    LCD_WR_DATA(yEnd>>8);
-    LCD_WR_DATA(0x00FF&yEnd);
+    LCD_WR_DATA(yStart >> 8);
+    LCD_WR_DATA(0x00FF & yStart);
+    LCD_WR_DATA(yEnd >> 8);
+    LCD_WR_DATA(0x00FF & yEnd);
 
     LCD_WriteRAM_Prepare();
 }
@@ -406,7 +415,7 @@ void LCD_WriteData16_Prepare()
 // Write 16-bit data
 void LCD_WriteData16(u16 data)
 {
-    while((SPI->SR & SPI_SR_TXE) == 0);
+    while ((SPI->SR & SPI_SR_TXE) == 0);
     SPI->DR = data;
 }
 
@@ -417,19 +426,19 @@ void LCD_WriteData16_End()
 }
 
 // draws a char on the screen
-void _LCD_DrawChar(u16 x,u16 y,u16 fc, u16 bc, char num, u8 size)
+void _LCD_DrawChar(u16 x, u16 y, u16 fc, u16 bc, char num, u8 size)
 {
     int32_t temp;
-    int32_t pos,t;
-    num=num-' ';
+    int32_t pos, t;
+    num = num - ' ';
     int upperbound = 16;
-    LCD_SetWindow(x,y,x+size-1,y+upperbound-1);
+    LCD_SetWindow(x, y, x + size - 1, y + upperbound - 1);
     LCD_WriteData16_Prepare();
-    for (t=0;t<upperbound;t++)
+    for (t = 0;t < upperbound;t++)
     {
-        for(pos=0;pos<size;pos++)
+        for (pos = 0;pos < size;pos++)
         {
-            temp=asc2_2616[(int)num][size-pos-1];
+            temp = asc2_2616[(int)num][size - pos - 1];
             if ((temp << t) & 0x8000)
                 LCD_WriteData16(fc);
             else
@@ -443,12 +452,12 @@ void _LCD_DrawChar(u16 x,u16 y,u16 fc, u16 bc, char num, u8 size)
 void LCD_Clear(u16 Color)
 {
     lcddev.select(1);
-    unsigned int i,m;
-    LCD_SetWindow(0,0,lcddev.width-1,lcddev.height-1);
+    unsigned int i, m;
+    LCD_SetWindow(0, 0, lcddev.width - 1, lcddev.height - 1);
     LCD_WriteData16_Prepare();
-    for(i=0;i<lcddev.height;i++)
+    for (i = 0;i < lcddev.height;i++)
     {
-        for(m=0;m<lcddev.width;m++)
+        for (m = 0;m < lcddev.width;m++)
         {
             LCD_WriteData16(Color);
         }
@@ -458,41 +467,41 @@ void LCD_Clear(u16 Color)
 }
 
 // sets up drawing char
-void LCD_DrawChar(u16 x,u16 y,u16 fc, u16 bc, char num, u8 size)
+void LCD_DrawChar(u16 x, u16 y, u16 fc, u16 bc, char num, u8 size)
 {
     lcddev.select(1);
-    _LCD_DrawChar(x,y,fc,bc,num,size);
+    _LCD_DrawChar(x, y, fc, bc, num, size);
     lcddev.select(0);
 }
 
 // draws a string by iterating through DrawChar
-void LCD_DrawString(u16 x,u16 y, u16 fc, u16 bg, const char *p, u8 size)
+void LCD_DrawString(u16 x, u16 y, u16 fc, u16 bg, const char* p, u8 size)
 {
     lcddev.select(1);
     int upperbound = 16;
-    while((*p<='~')&&(*p>=' '))
+    while ((*p <= '~') && (*p >= ' '))
     {
-        if(x>(lcddev.width-1)||y>(lcddev.height-1))
-        return;
-        _LCD_DrawChar(x,y,fc,bg,*p,size);
-        y+=upperbound;
+        if (x > (lcddev.width - 1) || y > (lcddev.height - 1))
+            return;
+        _LCD_DrawChar(x, y, fc, bg, *p, size);
+        y += upperbound;
         p++;
     }
     lcddev.select(0);
 }
 
 // draws a filled rectangle
-static void _LCD_Fill(u16 sx,u16 sy,u16 ex,u16 ey,u16 color)
+static void _LCD_Fill(u16 sx, u16 sy, u16 ex, u16 ey, u16 color)
 {
-    u16 i,j;
-    u16 width=ex-sx+1;
-    u16 height=ey-sy+1;
-    LCD_SetWindow(sx,sy,ex,ey);
+    u16 i, j;
+    u16 width = ex - sx + 1;
+    u16 height = ey - sy + 1;
+    LCD_SetWindow(sx, sy, ex, ey);
     LCD_WriteData16_Prepare();
-    for(i=0;i<height;i++)
+    for (i = 0;i < height;i++)
     {
-        for(j=0;j<width;j++)
-        LCD_WriteData16(color);
+        for (j = 0;j < width;j++)
+            LCD_WriteData16(color);
     }
     LCD_WriteData16_End();
 }
@@ -501,7 +510,7 @@ static void _LCD_Fill(u16 sx,u16 sy,u16 ex,u16 ey,u16 color)
 void LCD_DrawFillRectangle(u16 x1, u16 y1, u16 x2, u16 y2, u16 c)
 {
     lcddev.select(1);
-    _LCD_Fill(x1,y1,x2,y2,c);
+    _LCD_Fill(x1, y1, x2, y2, c);
     lcddev.select(0);
 }
 
@@ -566,15 +575,19 @@ void jump_to_app(const Application* app)
 {
     RUNNING_APP = 1;
     char* by = "By:";
+    char* instruction1 = "Press joystick";
+    char* instruction2 = "down to go";
     char* back = "Back";
-    LCD_Clear(WHITE);
+    LCD_Clear(SCREEN_WHITE);
     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
-    LCD_DrawString(209, 5, WHITE, LIGHTBLUE, app->name, 26); // menu text
-    LCD_DrawString(173, 5, BLACK, WHITE, by, 26);
-    LCD_DrawString(173, 53, BLACK, WHITE, app->authorfirst, 26);
-    LCD_DrawString(145, 53, BLACK, WHITE, app->authorlast, 26);
-    LCD_DrawString(5, 21, BLACK, WHITE, back, 26);
-    LCD_DrawChar(5, 5, BLACK, WHITE, 62, 26);
+    LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, app->name, 26); // menu text
+    LCD_DrawString(173, 5, SCREEN_BLACK, SCREEN_WHITE, by, 26);
+    LCD_DrawString(173, 53, SCREEN_BLACK, SCREEN_WHITE, app->authorfirst, 26);
+    LCD_DrawString(145, 53, SCREEN_BLACK, SCREEN_WHITE, app->authorlast, 26);
+    LCD_DrawString(61, 21, SCREEN_BLACK, SCREEN_WHITE, instruction1, 26);
+    LCD_DrawString(33, 21, SCREEN_BLACK, SCREEN_WHITE, instruction2, 26);
+    LCD_DrawString(5, 21, SCREEN_BLACK, SCREEN_WHITE, back, 26);
+    LCD_DrawChar(5, 5, SCREEN_BLACK, SCREEN_WHITE, 62, 26);
 }
 
 // Reloads the "Select App:" menu
@@ -583,16 +596,16 @@ void reload_menu(const char* MENU, const Application* const* APPLIST)
     RUNNING_APP = 0;
     int find_start = APP_NUM - (APP_NUM % 7);
     // SETS UP STARTING SCREEN
-    LCD_Clear(WHITE);
+    LCD_Clear(SCREEN_WHITE);
     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
-    LCD_DrawString(209, 5, WHITE, LIGHTBLUE, MENU, 26); // menu text
+    LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, MENU, 26); // menu text
     // loads correct 7 applications
     for (int i = find_start; i < (find_start + 7); i++)
     {
-        LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
+        LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
         if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
         {
-            i = APP_NUM + 7;
+            i = find_start + 7;
         }
     }
     update_display();
@@ -604,14 +617,14 @@ void shift_screen(int dir, const Application* const* APPLIST)
     // 0 = down, 1 = up
     // LCD_Clear(0xffff);
     // LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE);
-    // LCD_DrawString(209, 5, WHITE, LIGHTBLUE, MENU, 26);
-    LCD_DrawFillRectangle(0, 0, 203, 320, WHITE); // loads white box for apps
+    // LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, MENU, 26);
+    LCD_DrawFillRectangle(0, 0, 203, 320, SCREEN_WHITE); // loads white box for apps
     if (dir)
     {
         // loads apps when changing screen upward
         for (int i = APP_NUM; i > (APP_NUM - 7); i--)
         {
-            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
+            LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
             if ((i % 7) == 0) // ends loading when reaching top of last bit of apps
             {
                 i = APP_NUM - 7;
@@ -623,7 +636,7 @@ void shift_screen(int dir, const Application* const* APPLIST)
         // loads apps when changing screens down
         for (int i = APP_NUM; i < (APP_NUM + 7); i++)
         {
-            LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i]->name, 26);
+            LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i]->name, 26);
             if (i >= (MAXAPPS - 1)) // ends loading when reaching end of apps
             {
                 i = APP_NUM + 7;
@@ -636,8 +649,8 @@ void shift_screen(int dir, const Application* const* APPLIST)
 void update_display()
 {
     int change_amnt = APP_NUM % MAXAPPS; // for % of scroll bar calculations
-    LCD_DrawFillRectangle(0, 0, 201, 21, WHITE);
-    LCD_DrawChar(173 - (28 * (APP_NUM % 7)), 5, BLACK, WHITE, 62, 26); // each "line" for text is 28 pixels apart with max of 7 apps per line
+    LCD_DrawFillRectangle(0, 0, 201, 21, SCREEN_WHITE);
+    LCD_DrawChar(173 - (28 * (APP_NUM % 7)), 5, SCREEN_BLACK, SCREEN_WHITE, 62, 26); // each "line" for text is 28 pixels apart with max of 7 apps per line
     LCD_DrawFillRectangle(0, 310, 203, 320, GRAY);
     LCD_DrawFillRectangle(203 - (203 * (change_amnt + 1) / MAXAPPS), 310, 203 - (203 * change_amnt / MAXAPPS), 320, LIGHTGRAY); //percentage calcs for filling scroll bar
 }
@@ -659,17 +672,17 @@ void update_display()
 //     APPLIST[8] = "you";
 //     APPLIST[9] = "down.";
 //     // SETS UP STARTING SCREEN
-//     LCD_Clear(WHITE);
+//     LCD_Clear(SCREEN_WHITE);
 //     LCD_DrawFillRectangle(204, 0, 240, 320, LIGHTBLUE); // menu background
-//     LCD_DrawString(209, 5, WHITE, LIGHTBLUE, MENU, 26); // menu text
+//     LCD_DrawString(209, 5, SCREEN_WHITE, LIGHTBLUE, MENU, 26); // menu text
 //     // loads first 7 applications
 //     for (int i = 0; i < 7; i++)
 //     {
-//         LCD_DrawString(173 - (28 * (i % 7)), 21, BLACK, WHITE, APPLIST[i], 26);
+//         LCD_DrawString(173 - (28 * (i % 7)), 21, SCREEN_BLACK, SCREEN_WHITE, APPLIST[i], 26);
 //     }
 //     // loads arrow
-//     LCD_DrawFillRectangle(0, 0, 201, 21, WHITE);
-//     LCD_DrawChar(173, 5, BLACK, WHITE, 62, 26);
+//     LCD_DrawFillRectangle(0, 0, 201, 21, SCREEN_WHITE);
+//     LCD_DrawChar(173, 5, SCREEN_BLACK, SCREEN_WHITE, 62, 26);
 //     // loads scroll bar
 //     LCD_DrawFillRectangle(0, 310, 203, 320, GRAY);
 //     LCD_DrawFillRectangle(174, 310, 203, 320, LIGHTGRAY);

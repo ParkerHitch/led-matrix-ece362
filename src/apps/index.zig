@@ -6,6 +6,19 @@ pub const zigApps = [_]*const Application{
     &@import("templateApp.zig").app,
     &@import("axisApp.zig").app,
     &@import("tesseract.zig").app,
+    &@import("dvdApp.zig").app,
+    &@import("fireworks.zig").app,
+    &@import("shrinkBox.zig").app,
+    &@import("snake.zig").app,
+    &@import("cursor.zig").app,
+    &@import("waterdrop.zig").app,
+    &@import("easystacker.zig").app,
+    &@import("hardstacker.zig").app,
+    &@import("cyclone.zig").app,
+    &@import("cycloneSingle.zig").app,
+    &@import("cvm.zig").app,
+    &@import("bamTest.zig").app,
+    &@import("gamecube.zig").app,
 };
 
 // comptime {

@@ -3,16 +3,17 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
+const joystick = @import("../subsystems/joystick.zig");
 
 pub const app: Application = .{
     .renderFn = &appMain,
 
-    .name = "Template Zig App",
+    .name = "Tesseract",
     .authorfirst = "John",
     .authorlast = "Burns",
 };
 
-pub fn appMain() callconv(.C) void {
+fn appMain() callconv(.C) void {
     var dt: deltaTime.DeltaTime = .{};
     dt.start();
     const tickRate: u32 = 1; // i.e. target fps
@@ -21,10 +22,15 @@ pub fn appMain() callconv(.C) void {
 
     var drawIdx: u32 = 0;
 
-    while (true) {
+    var appRunning: bool = true;
+
+    while (appRunning) {
         timeSinceUpdate += dt.milli();
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0.0;
+
+            appRunning = !joystick.button_pressed();
+
             drawIdx = if (drawIdx >= 7) 0 else drawIdx + 1;
 
             // draw to the display

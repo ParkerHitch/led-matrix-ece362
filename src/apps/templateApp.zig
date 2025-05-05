@@ -7,6 +7,7 @@ const std = @import("std");
 const deltaTime = @import("../subsystems/deltaTime.zig");
 const matrix = @import("../subsystems/matrix.zig");
 const draw = @import("../subsystems/draw.zig");
+const joystick = @import("../subsystems/joystick.zig");
 // const rand = std.Random; // <-- uncomment for random lib
 //
 // const test = rand.DefaultPrng;
@@ -30,7 +31,7 @@ pub const app: Application = .{
 };
 
 // app entry point
-pub fn appMain() callconv(.C) void {
+fn appMain() callconv(.C) void {
     // NOTE: for random number generator uncomment the rand include,
     // and use deltaTime.timestamp() as a seed
     // rand.DefaultPrng.init(@intCast(deltaTime.timestamp())); <-- for seeding random
@@ -44,9 +45,12 @@ pub fn appMain() callconv(.C) void {
     const updateTime: u32 = 1000 / tickRate; // 1000 ms * (period of a tick)
     var timeSinceUpdate: u32 = 0;
 
+    // loop control variable
+    var appRunning = true;
+
     // collision consts
-    const matrixLowerBound: i32 = 0;
-    const matrixUpperBound: i32 = 7;
+    // matrix.upperBound;
+    // matrix.lowerBound;
 
     // variable for keeping track the color to draw
     var drawIdx: u32 = 0;
@@ -56,7 +60,10 @@ pub fn appMain() callconv(.C) void {
     var xPos: i32 = 0;
 
     // TODO: replace true in while true with joystick press exit condition
-    while (true) {
+    while (appRunning) {
+
+        // checking for exit condition
+        appRunning = !joystick.button_pressed();
         // NOTE: There are other ways to use dt for keeping track of render time.
         // This method will lock your update logic to the framerate of the display,
         // and limit the framefrate to a max value determined by tickRate
@@ -64,19 +71,18 @@ pub fn appMain() callconv(.C) void {
         if (timeSinceUpdate >= updateTime) {
             timeSinceUpdate = 0;
 
-            // put your app logic here
-            drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
-
             // movment update
             xPos += xVel;
 
             // collision detection & resolution
-            if (xPos > matrixUpperBound) {
-                xPos = matrixUpperBound;
+            if (xPos > matrix.upperBound) {
+                xPos = matrix.upperBound;
                 xVel *= -1;
-            } else if (xPos < matrixLowerBound) {
-                xPos = matrixLowerBound;
+                drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
+            } else if (xPos < matrix.lowerBound) {
+                xPos = matrix.lowerBound;
                 xVel *= -1;
+                drawIdx = if (drawIdx >= 6) 0 else drawIdx + 1;
             }
 
             // draw to the display

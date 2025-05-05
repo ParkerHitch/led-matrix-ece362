@@ -4,9 +4,13 @@ const LedMatrix = @import("subsystems/matrix.zig");
 const Screen: type = @import("subsystems/screen.zig");
 const Joystick: type = @import("subsystems/joystick.zig");
 const deltaTime = @import("subsystems/deltaTime.zig");
-const Button: type = @import("subsystems/button.zig");
+const Button_A: type = @import("subsystems/button_a.zig");
+const Button_B = @import("subsystems/button_b.zig");
+const Debounce = @import("subsystems/debounce.zig");
+const Draw = @import("subsystems/draw.zig");
 const cImport = @import("cImport.zig");
 const Application = cImport.Application;
+const imu = @import("subsystems/imu.zig");
 const peripherals = microzig.chip.peripherals;
 const RCC = microzig.chip.peripherals.RCC;
 const UartDebug = @import("util/uartDebug.zig");
@@ -17,11 +21,14 @@ const ChipInit = @import("init/general.zig");
 // Make sure everything gets exported
 comptime {
     _ = @import("cExport.zig");
+    _ = @import("subsystems/debounce.zig");
 }
 
 pub const microzig_options = .{
     .interrupts = .{
         .DMA1_Ch4_7_DMA2_Ch3_5 = microzig.interrupt.Handler{ .C = LedMatrix.IRQ_DMA1_Ch4_7_DMA2_Ch3_5 },
+        .TIM14 = microzig.interrupt.Handler{ .C = Debounce.TIM14_IRQHandler },
+        .TIM15 = microzig.interrupt.Handler{ .C = LedMatrix.TIM15_IRQ },
     },
 };
 
@@ -39,23 +46,19 @@ pub fn main() void {
         UartDebug.init();
     }
 
-    // NOTE: TEMP
-    const tempAppIdx = 3;
-    const appMain = apps[tempAppIdx].renderFn.?;
-    appMain();
-
     // initializing display
     const MENU = "Select App:";
     Screen.screen_init();
     Joystick.joystick_init();
-    cImport.init_button();
-
-    UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
+    cImport.init_button_a();
+    cImport.init_button_b();
+    cImport.init_debounce();
+    imu.init();
 
     UartDebug.printIfDebug("All subsystems initialized!\n", .{}) catch {};
 
     while (true) {
-        Joystick.joystick_update();
+        // UartDebug.printIfDebug("Joystick X = {}, Joystick Y = {}\n", .{ Joystick.voltVec[0], Joystick.voltVec[1] }) catch {};
 
         if (RUNNING_APP == 1) {
             if (Joystick.button_pressed()) {
@@ -65,6 +68,11 @@ pub fn main() void {
         } else {
             if (Joystick.button_pressed()) {
                 cImport.cMenuDisp.jump_to_app(@ptrCast(apps[@intCast(APP_NUM)]));
+                const appMain = apps[@intCast(APP_NUM)].renderFn.?;
+                appMain();
+                cImport.cMenuDisp.reload_menu(MENU, @ptrCast(&apps));
+                LedMatrix.clearFrame(Draw.Color(.BLACK));
+                LedMatrix.render();
                 continue;
             }
             if (Joystick.moved_up()) {

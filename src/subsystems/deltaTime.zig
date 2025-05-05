@@ -39,7 +39,6 @@ pub fn timestamp() callconv(.C) u32 {
 }
 
 pub const DeltaTime = struct {
-    startTime: u32 = 0,
     currTime: u32 = 0,
 
     /// must be called before the .mili method to give a reference starting time
@@ -49,13 +48,13 @@ pub const DeltaTime = struct {
 
     /// returns the time in milliseconds since start or last milli call
     pub fn milli(self: *DeltaTime) u32 {
-        self.startTime = self.currTime;
+        const startTime = self.currTime;
         self.currTime = @bitCast(TIM3.CNT);
 
-        if (self.startTime < self.currTime) {
-            return self.currTime - self.startTime;
-        } else if (self.startTime > self.currTime) {
-            return maxTimARR - self.startTime + self.currTime;
+        if (startTime < self.currTime) {
+            return self.currTime - startTime;
+        } else if (startTime > self.currTime) {
+            return maxTimARR - startTime + self.currTime;
         } else {
             // WARN: realllly scuffed
             cImport.nano_wait(3000000); // wait a couple milli seconds
@@ -74,13 +73,13 @@ pub export fn dtStart(dt: *cImport.DeltaTime) callconv(.C) void {
 
 /// get time in mili seconds since start or previous mili()/seconds() call
 pub export fn dtMilli(dt: *cImport.DeltaTime) callconv(.C) c_uint {
-    dt.startTime = dt.currTime;
+    const startTime = dt.currTime;
     dt.currTime = @bitCast(TIM3.CNT);
 
-    if (dt.startTime < dt.currTime) {
-        return dt.currTime - dt.startTime;
-    } else if (dt.startTime > dt.currTime) {
-        return maxTimARR - dt.startTime + dt.currTime;
+    if (startTime < dt.currTime) {
+        return dt.currTime - startTime;
+    } else if (startTime > dt.currTime) {
+        return maxTimARR - startTime + dt.currTime;
     } else {
         // WARN: realllly scuffed
         cImport.nano_wait(3000000); // wait a couple milli seconds
